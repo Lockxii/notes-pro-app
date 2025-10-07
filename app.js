@@ -67,11 +67,37 @@ function setupEventListeners() {
         button.addEventListener('touchstart', function(e) {
             this.style.transform = 'scale(0.95)';
             this.style.opacity = '0.8';
-        });
+            e.stopPropagation();
+        }, { passive: false });
         
         button.addEventListener('touchend', function(e) {
             this.style.transform = 'scale(1)';
             this.style.opacity = '1';
+            e.stopPropagation();
+        }, { passive: false });
+        
+        // Click direct pour mobile
+        button.addEventListener('click', function(e) {
+            e.stopPropagation();
+            e.preventDefault();
+            
+            // Gestion des commandes de formatage
+            const command = this.getAttribute('data-command');
+            const action = this.getAttribute('data-action');
+            
+            if (command) {
+                toggleFormat(command);
+            } else if (action === 'image') {
+                document.getElementById('file-input').click();
+            } else if (this.onclick) {
+                this.onclick();
+            } else if (this.getAttribute('onclick')) {
+                try {
+                    eval(this.getAttribute('onclick'));
+                } catch (error) {
+                    console.log('Button action error:', error);
+                }
+            }
         });
         
         // Empêcher la perte de focus
@@ -119,9 +145,11 @@ function setupEventListeners() {
 function showToolbarOnFocus() {
     setTimeout(() => {
         const toolbarContainer = document.getElementById('toolbar-container');
-        toolbarContainer.classList.add('show');
-        toolbarVisible = true;
-    }, 300); // Délai pour laisser le clavier apparaître
+        if (toolbarContainer) {
+            toolbarContainer.classList.add('show');
+            toolbarVisible = true;
+        }
+    }, 500); // Délai plus long pour mobile
 }
 
 function hideToolbarOnBlur() {
@@ -145,38 +173,60 @@ function hideToolbarOnBlur() {
 
 function toggleToolbar() {
     const toolbarContainer = document.getElementById('toolbar-container');
-    toolbarContainer.classList.toggle('show');
-    toolbarVisible = !toolbarVisible;
+    if (toolbarContainer) {
+        toolbarContainer.classList.toggle('show');
+        toolbarVisible = !toolbarVisible;
+        
+        // Forcer le focus sur l'éditeur si on affiche la toolbar
+        if (toolbarVisible) {
+            setTimeout(() => {
+                const editor = document.getElementById('editor');
+                if (editor) {
+                    editor.focus();
+                }
+            }, 100);
+        }
+    }
 }
 
 // Fonctions de formatage de texte
 function toggleFormat(command) {
-    const selection = window.getSelection();
-    const savedSelection = saveSelection();
-    
-    document.execCommand(command, false, null);
-    updateToolbarState();
-    
-    // Restaurer la sélection si elle existait
-    if (savedSelection && selection.rangeCount > 0 && !selection.isCollapsed) {
+    try {
+        const selection = window.getSelection();
+        const savedSelection = saveSelection();
+        
+        document.execCommand(command, false, null);
+        updateToolbarState();
+        
+        // Restaurer la sélection si elle existait
+        if (savedSelection && selection.rangeCount > 0 && !selection.isCollapsed) {
+            setTimeout(() => {
+                restoreSelection(savedSelection);
+            }, 10);
+        }
+        
         setTimeout(() => {
-            restoreSelection(savedSelection);
-        }, 10);
+            const editor = document.getElementById('editor');
+            if (editor) {
+                editor.focus();
+            }
+        }, 50);
+        
+        // Sauvegarder les changements
+        autoSave();
+    } catch (error) {
+        console.log('Format error:', error);
     }
-    
-    setTimeout(() => {
-        document.getElementById('editor').focus();
-    }, 10);
 }
 
 function applyFontFamily() {
-    const fontSelect = document.getElementById('font-select');
-    const fontFamily = fontSelect.value;
-    
-
-    
-    const selection = window.getSelection();
-    const savedSelection = saveSelection();
+    try {
+        const fontSelect = document.getElementById('font-select');
+        if (!fontSelect) return;
+        
+        const fontFamily = fontSelect.value;
+        const selection = window.getSelection();
+        const savedSelection = saveSelection();
     
     if (selection.rangeCount > 0 && !selection.isCollapsed) {
         const range = selection.getRangeAt(0);
@@ -196,15 +246,22 @@ function applyFontFamily() {
     } else {
         // Pour le prochain texte
         const editor = document.getElementById('editor');
-        editor.style.fontFamily = fontFamily;
+        if (editor) {
+            editor.style.fontFamily = fontFamily;
+        }
     }
     
     // Forcer le focus sur l'éditeur
     setTimeout(() => {
         const editor = document.getElementById('editor');
-        editor.focus();
+        if (editor) {
+            editor.focus();
+        }
         autoSave(); // Sauvegarder les changements
     }, 50);
+    } catch (error) {
+        console.log('Font family error:', error);
+    }
 }
 
 function applyFontSize() {

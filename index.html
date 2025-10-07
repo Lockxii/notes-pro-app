@@ -518,14 +518,14 @@
                 </div>
                 
                 <div class="toolbar-group">
-                    <button class="toolbar-btn" id="bold-btn" onclick="toggleFormat('bold')"><b>B</b></button>
-                    <button class="toolbar-btn" id="italic-btn" onclick="toggleFormat('italic')"><i>I</i></button>
-                    <button class="toolbar-btn" id="underline-btn" onclick="toggleFormat('underline')"><u>U</u></button>
+                    <button class="toolbar-btn" id="bold-btn" data-command="bold"><b>B</b></button>
+                    <button class="toolbar-btn" id="italic-btn" data-command="italic"><i>I</i></button>
+                    <button class="toolbar-btn" id="underline-btn" data-command="underline"><u>U</u></button>
                 </div>
                 
                 <div class="toolbar-group">
                     <input type="color" class="color-input" id="color-input" value="#000000">
-                    <button class="toolbar-btn" onclick="document.getElementById('file-input').click()">📷</button>
+                    <button class="toolbar-btn" id="image-btn" data-action="image">📷</button>
                 </div>
             </div>
         </div>
