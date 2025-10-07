@@ -31,6 +31,7 @@
             user-select: none;
             -webkit-touch-callout: none;
             -webkit-tap-highlight-color: transparent;
+            overscroll-behavior: contain;
         }
         
         .app-container {
@@ -246,9 +247,16 @@
             display: inline-block;
             border: 2px dashed transparent;
             cursor: move;
+            user-select: none;
+            -webkit-user-select: none;
+            touch-action: none;
         }
         
         .resizable-image:hover {
+            border-color: #007AFF;
+        }
+        
+        .resizable-image.selected {
             border-color: #007AFF;
         }
         
@@ -256,17 +264,26 @@
             max-width: 100%;
             height: auto;
             display: block;
+            pointer-events: none; /* Empêche le drag natif */
         }
         
         .resize-handle {
             position: absolute;
-            width: 10px;
-            height: 10px;
+            width: 15px;
+            height: 15px;
             background: #007AFF;
             border-radius: 50%;
-            bottom: -5px;
-            right: -5px;
+            bottom: -7px;
+            right: -7px;
             cursor: se-resize;
+            border: 2px solid white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+            touch-action: none;
+        }
+        
+        .resize-handle:hover {
+            background: #0056CC;
+            transform: scale(1.1);
         }
         
         .notes-modal {

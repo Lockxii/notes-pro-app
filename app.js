@@ -140,7 +140,7 @@ function applyFontFamily() {
     const fontSelect = document.getElementById('font-select');
     const fontFamily = fontSelect.value;
     
-    console.log('Applying font family:', fontFamily); // Debug
+
     
     const selection = window.getSelection();
     const savedSelection = saveSelection();
@@ -179,7 +179,7 @@ function applyFontSize() {
     const fontSize = sizeSelect.value;
     currentFontSize = parseInt(fontSize);
     
-    console.log('Applying font size:', fontSize + 'px'); // Debug
+
     
     const selection = window.getSelection();
     const savedSelection = saveSelection();
@@ -253,7 +253,6 @@ function restoreSelection(savedSelection) {
             selection.addRange(range);
         } catch (e) {
             // Ignore les erreurs de restauration si les noeuds n'existent plus
-            console.log('Erreur lors de la restauration de la sélection:', e);
         }
     }
 }
@@ -316,12 +315,15 @@ function insertImage(src) {
     img.src = src;
     img.style.maxWidth = '300px';
     img.style.height = 'auto';
-    img.style.margin = '10px';
-    img.style.cursor = 'pointer';
+    img.style.cursor = 'move';
+    img.draggable = false; // Empêcher le drag natif du navigateur
     
-    // Wrapper pour rendre l'image redimensionnable
+    // Wrapper pour rendre l'image déplaçable et redimensionnable
     const wrapper = document.createElement('div');
     wrapper.className = 'resizable-image';
+    wrapper.style.position = 'relative';
+    wrapper.style.display = 'inline-block';
+    wrapper.style.margin = '5px';
     wrapper.appendChild(img);
     
     // Handle de redimensionnement
@@ -339,7 +341,7 @@ function insertImage(src) {
         editor.appendChild(wrapper);
     }
     
-    // Événements pour l'image
+    // Événements pour l'image (déplacement + redimensionnement)
     setupImageEvents(wrapper, img, resizeHandle);
     
     // Sauvegarde automatique
@@ -348,7 +350,9 @@ function insertImage(src) {
 
 function setupImageEvents(wrapper, img, resizeHandle) {
     let isResizing = false;
+    let isDragging = false;
     let startX, startY, startWidth, startHeight;
+    let dragStartX, dragStartY, wrapperStartX, wrapperStartY;
     
     // Sélection d'image
     img.addEventListener('click', function(e) {
@@ -356,23 +360,87 @@ function setupImageEvents(wrapper, img, resizeHandle) {
         selectImage(wrapper);
     });
     
+    // Déplacement de l'image (touch et mouse)
+    img.addEventListener('mousedown', startDrag);
+    img.addEventListener('touchstart', startDrag, { passive: false });
+    
     // Redimensionnement
     resizeHandle.addEventListener('mousedown', startResize);
-    resizeHandle.addEventListener('touchstart', startResize);
+    resizeHandle.addEventListener('touchstart', startResize, { passive: false });
+    
+    function startDrag(e) {
+        if (e.target === resizeHandle) return; // Ne pas déplacer si on redimensionne
+        
+        isDragging = true;
+        selectImage(wrapper);
+        
+        const clientX = e.type === 'mousedown' ? e.clientX : e.touches[0].clientX;
+        const clientY = e.type === 'mousedown' ? e.clientY : e.touches[0].clientY;
+        
+        dragStartX = clientX;
+        dragStartY = clientY;
+        
+        const rect = wrapper.getBoundingClientRect();
+        wrapperStartX = rect.left;
+        wrapperStartY = rect.top;
+        
+        document.addEventListener('mousemove', doDrag);
+        document.addEventListener('touchmove', doDrag, { passive: false });
+        document.addEventListener('mouseup', stopDrag);
+        document.addEventListener('touchend', stopDrag);
+        
+        e.preventDefault();
+    }
+    
+    function doDrag(e) {
+        if (!isDragging) return;
+        
+        const clientX = e.type === 'mousemove' ? e.clientX : e.touches[0].clientX;
+        const clientY = e.type === 'mousemove' ? e.clientY : e.touches[0].clientY;
+        
+        const deltaX = clientX - dragStartX;
+        const deltaY = clientY - dragStartY;
+        
+        // Convertir en position relative par rapport à l'éditeur
+        const editor = document.getElementById('editor');
+        const editorRect = editor.getBoundingClientRect();
+        
+        const newX = Math.max(0, Math.min(editorRect.width - wrapper.offsetWidth, wrapperStartX - editorRect.left + deltaX));
+        const newY = Math.max(0, wrapperStartY - editorRect.top + deltaY);
+        
+        wrapper.style.position = 'absolute';
+        wrapper.style.left = newX + 'px';
+        wrapper.style.top = newY + 'px';
+        wrapper.style.zIndex = '10';
+        
+        e.preventDefault();
+    }
+    
+    function stopDrag() {
+        isDragging = false;
+        document.removeEventListener('mousemove', doDrag);
+        document.removeEventListener('touchmove', doDrag);
+        document.removeEventListener('mouseup', stopDrag);
+        document.removeEventListener('touchend', stopDrag);
+        autoSave();
+    }
     
     function startResize(e) {
         isResizing = true;
+        selectImage(wrapper);
+        
         startX = e.type === 'mousedown' ? e.clientX : e.touches[0].clientX;
         startY = e.type === 'mousedown' ? e.clientY : e.touches[0].clientY;
         startWidth = parseInt(window.getComputedStyle(img).width, 10);
         startHeight = parseInt(window.getComputedStyle(img).height, 10);
         
         document.addEventListener('mousemove', doResize);
-        document.addEventListener('touchmove', doResize);
+        document.addEventListener('touchmove', doResize, { passive: false });
         document.addEventListener('mouseup', stopResize);
         document.addEventListener('touchend', stopResize);
         
         e.preventDefault();
+        e.stopPropagation();
     }
     
     function doResize(e) {
@@ -381,13 +449,13 @@ function setupImageEvents(wrapper, img, resizeHandle) {
         const clientX = e.type === 'mousemove' ? e.clientX : e.touches[0].clientX;
         const clientY = e.type === 'mousemove' ? e.clientY : e.touches[0].clientY;
         
-        const newWidth = startWidth + clientX - startX;
-        const newHeight = startHeight + clientY - startY;
+        const newWidth = Math.max(50, startWidth + clientX - startX);
+        const newHeight = Math.max(50, startHeight + clientY - startY);
         
-        if (newWidth > 50 && newHeight > 50) {
-            img.style.width = newWidth + 'px';
-            img.style.height = newHeight + 'px';
-        }
+        img.style.width = newWidth + 'px';
+        img.style.height = newHeight + 'px';
+        
+        e.preventDefault();
     }
     
     function stopResize() {
@@ -403,11 +471,11 @@ function setupImageEvents(wrapper, img, resizeHandle) {
 function selectImage(wrapper) {
     // Désélectionner toutes les autres images
     document.querySelectorAll('.resizable-image').forEach(img => {
-        img.style.border = '2px dashed transparent';
+        img.classList.remove('selected');
     });
     
     // Sélectionner cette image
-    wrapper.style.border = '2px dashed #007AFF';
+    wrapper.classList.add('selected');
     selectedImage = wrapper;
 }
 
