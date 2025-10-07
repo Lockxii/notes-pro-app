@@ -62,7 +62,7 @@
             align-items: center;
         }
         
-        .notes-list-btn, .save-btn, .theme-btn {
+        .notes-list-btn, .save-btn, .theme-btn, .undo-btn {
             background: rgba(255,255,255,0.2);
             border: none;
             color: white;
@@ -73,12 +73,17 @@
             transition: all 0.2s;
         }
         
-        .theme-btn {
+        .theme-btn, .undo-btn {
             padding: 8px 12px;
             font-size: 16px;
         }
         
-        .notes-list-btn:hover, .save-btn:hover, .theme-btn:hover {
+        .undo-btn {
+            font-size: 18px;
+            font-weight: bold;
+        }
+        
+        .notes-list-btn:hover, .save-btn:hover, .theme-btn:hover, .undo-btn:hover {
             background: rgba(255,255,255,0.3);
         }
         
@@ -452,6 +457,7 @@
             <button class="notes-list-btn" onclick="showNotesList()">📝 Notes</button>
             <h1>Notes Pro</h1>
             <div class="header-controls">
+                <button class="undo-btn" onclick="undoLastAction()" title="Annuler">↶</button>
                 <button class="theme-btn" onclick="toggleTheme()">🌙</button>
                 <button class="save-btn" onclick="saveCurrentNote()">💾 Sauver</button>
             </div>

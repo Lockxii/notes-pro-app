@@ -5,6 +5,8 @@ let toolbarVisible = false;
 let selectedImage = null;
 let currentFontSize = 16;
 let isDarkMode = localStorage.getItem('darkMode') === 'true';
+let undoHistory = [];
+let maxUndoSteps = 20;
 
 // Initialisation de l'app
 document.addEventListener('DOMContentLoaded', function() {
@@ -496,6 +498,10 @@ function createNewNote() {
     // Vider l'éditeur
     document.getElementById('editor').innerHTML = '';
     
+    // Réinitialiser l'historique pour la nouvelle note
+    undoHistory = [];
+    saveToUndoHistory();
+    
     saveToStorage();
     hideNotesList();
 }
@@ -532,7 +538,80 @@ function saveCurrentNote() {
 }
 
 function autoSave() {
+    saveToUndoHistory();
     saveCurrentNote();
+}
+
+// Système d'annulation (Undo)
+function saveToUndoHistory() {
+    const editor = document.getElementById('editor');
+    const currentState = {
+        content: editor.innerHTML,
+        timestamp: Date.now()
+    };
+    
+    // Éviter de sauvegarder le même état
+    if (undoHistory.length === 0 || undoHistory[undoHistory.length - 1].content !== currentState.content) {
+        undoHistory.push(currentState);
+        
+        // Limiter la taille de l'historique
+        if (undoHistory.length > maxUndoSteps) {
+            undoHistory.shift();
+        }
+    }
+}
+
+function undoLastAction() {
+    if (undoHistory.length <= 1) {
+        // Feedback visuel si pas d'historique
+        const undoBtn = document.querySelector('.undo-btn');
+        const originalText = undoBtn.textContent;
+        undoBtn.textContent = '✗';
+        undoBtn.style.background = 'rgba(255,59,48,0.3)';
+        
+        setTimeout(() => {
+            undoBtn.textContent = originalText;
+            undoBtn.style.background = 'rgba(255,255,255,0.2)';
+        }, 1000);
+        return;
+    }
+    
+    // Retirer l'état actuel
+    undoHistory.pop();
+    
+    // Récupérer l'état précédent
+    const previousState = undoHistory[undoHistory.length - 1];
+    
+    if (previousState) {
+        const editor = document.getElementById('editor');
+        editor.innerHTML = previousState.content;
+        
+        // Feedback visuel de succès
+        const undoBtn = document.querySelector('.undo-btn');
+        const originalText = undoBtn.textContent;
+        undoBtn.textContent = '✓';
+        undoBtn.style.background = 'rgba(52,199,89,0.3)';
+        
+        setTimeout(() => {
+            undoBtn.textContent = originalText;
+            undoBtn.style.background = 'rgba(255,255,255,0.2)';
+        }, 1000);
+        
+        // Rétablir les événements sur les images restaurées
+        setTimeout(() => {
+            const images = editor.querySelectorAll('.resizable-image');
+            images.forEach(wrapper => {
+                const img = wrapper.querySelector('img');
+                const resizeHandle = wrapper.querySelector('.resize-handle');
+                if (img && resizeHandle) {
+                    setupImageEvents(wrapper, img, resizeHandle);
+                }
+            });
+        }, 100);
+        
+        // Sauvegarder la note modifiée
+        saveCurrentNote();
+    }
 }
 
 function loadNote(noteId) {
@@ -540,7 +619,25 @@ function loadNote(noteId) {
     
     currentNoteId = noteId;
     const note = notes[noteId];
-    document.getElementById('editor').innerHTML = note.content;
+    const editor = document.getElementById('editor');
+    editor.innerHTML = note.content;
+    
+    // Réinitialiser l'historique pour la nouvelle note
+    undoHistory = [];
+    saveToUndoHistory();
+    
+    // Rétablir les événements sur les images
+    setTimeout(() => {
+        const images = editor.querySelectorAll('.resizable-image');
+        images.forEach(wrapper => {
+            const img = wrapper.querySelector('img');
+            const resizeHandle = wrapper.querySelector('.resize-handle');
+            if (img && resizeHandle) {
+                setupImageEvents(wrapper, img, resizeHandle);
+            }
+        });
+    }, 100);
+    
     hideNotesList();
 }
 
@@ -637,6 +734,10 @@ function handleKeyboard(e) {
             case 's':
                 e.preventDefault();
                 saveCurrentNote();
+                break;
+            case 'z':
+                e.preventDefault();
+                undoLastAction();
                 break;
         }
     }
