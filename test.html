@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Mobile</title>
+    <style>
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, sans-serif; 
+            padding: 20px; 
+            background: #000; 
+            color: #fff; 
+        }
+        button { 
+            padding: 15px 20px; 
+            font-size: 18px; 
+            background: #007AFF; 
+            color: white; 
+            border: none; 
+            border-radius: 10px; 
+            margin: 10px; 
+            min-width: 44px; 
+            min-height: 44px; 
+            touch-action: manipulation; 
+        }
+        button:active { 
+            background: #0056CC; 
+            transform: scale(0.95); 
+        }
+    </style>
+</head>
+<body>
+    <h1>Test Tactile</h1>
+    <p>Site principal : <a href="/" style="color: #007AFF;">Notes Pro</a></p>
+    <p>User Agent: <span id="ua"></span></p>
+    <p>Touch Support: <span id="touch"></span></p>
+    <button onclick="alert('Button works!')">Test Button</button>
+    
+    <script>
+        document.getElementById('ua').textContent = navigator.userAgent.includes('iPhone') ? 'iPhone' : 'Other';
+        document.getElementById('touch').textContent = 'ontouchstart' in window ? 'YES' : 'NO';
+    </script>
+</body>
+</html>
