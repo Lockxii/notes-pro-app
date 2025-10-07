@@ -1,0 +1,35 @@
+{
+    "name": "Notes Pro",
+    "short_name": "Notes Pro",
+    "description": "Application de prise de notes avec édition riche et support d'images",
+    "start_url": "/",
+    "display": "standalone",
+    "background_color": "#ffffff",
+    "theme_color": "#007AFF",
+    "orientation": "portrait",
+    "scope": "/",
+    "lang": "fr",
+    "icons": [
+        {
+            "src": "icon-192.png",
+            "sizes": "192x192",
+            "type": "image/png",
+            "purpose": "maskable any"
+        },
+        {
+            "src": "icon-512.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "maskable any"
+        }
+    ],
+    "categories": ["productivity", "utilities"],
+    "screenshots": [
+        {
+            "src": "screenshot1.png",
+            "sizes": "390x844",
+            "type": "image/png",
+            "form_factor": "narrow"
+        }
+    ]
+}
