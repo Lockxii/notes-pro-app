@@ -2,12 +2,12 @@
     "name": "Notes Pro",
     "short_name": "Notes Pro",
     "description": "Application de prise de notes avec édition riche et support d'images",
-    "start_url": "/",
+    "start_url": "/notes-pro-app/",
     "display": "standalone",
     "background_color": "#ffffff",
     "theme_color": "#007AFF",
     "orientation": "portrait",
-    "scope": "/",
+    "scope": "/notes-pro-app/",
     "lang": "fr",
     "icons": [
         {
