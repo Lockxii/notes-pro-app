@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <title>Notes Simple</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, sans-serif; 
+            background: #000; 
+            color: #fff; 
+            height: 100vh;
+        }
+        .editor { 
+            width: 100%; 
+            height: 70vh; 
+            padding: 20px; 
+            background: #000; 
+            color: #fff; 
+            border: none; 
+            outline: none; 
+            font-size: 16px; 
+            resize: none;
+        }
+        .toolbar { 
+            background: #1a1a1a; 
+            padding: 15px; 
+            display: flex; 
+            gap: 15px; 
+            justify-content: center;
+        }
+        button { 
+            background: #007AFF; 
+            color: white; 
+            border: none; 
+            padding: 15px 20px; 
+            border-radius: 10px; 
+            font-size: 18px; 
+            min-width: 50px; 
+            min-height: 50px; 
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
+        }
+        button:active { 
+            background: #0056CC; 
+            transform: scale(0.95); 
+        }
+    </style>
+</head>
+<body>
+    <div class="toolbar">
+        <button onclick="makeBold()" id="boldBtn">B</button>
+        <button onclick="makeItalic()">I</button>
+        <button onclick="makeUnderline()">U</button>
+    </div>
+    
+    <textarea class="editor" id="editor" placeholder="Tapez votre texte ici..."></textarea>
+    
+    <script>
+        function makeBold() {
+            console.log('Bold clicked');
+            const editor = document.getElementById('editor');
+            const start = editor.selectionStart;
+            const end = editor.selectionEnd;
+            const text = editor.value;
+            
+            if (start !== end) {
+                const selectedText = text.substring(start, end);
+                const newText = text.substring(0, start) + '**' + selectedText + '**' + text.substring(end);
+                editor.value = newText;
+                editor.focus();
+                editor.setSelectionRange(start + 2, end + 2);
+            } else {
+                editor.value = text.substring(0, start) + '**' + text.substring(start);
+                editor.focus();
+                editor.setSelectionRange(start + 2, start + 2);
+            }
+        }
+        
+        function makeItalic() {
+            console.log('Italic clicked');
+            const editor = document.getElementById('editor');
+            const start = editor.selectionStart;
+            const end = editor.selectionEnd;
+            const text = editor.value;
+            
+            if (start !== end) {
+                const selectedText = text.substring(start, end);
+                const newText = text.substring(0, start) + '*' + selectedText + '*' + text.substring(end);
+                editor.value = newText;
+                editor.focus();
+                editor.setSelectionRange(start + 1, end + 1);
+            }
+        }
+        
+        function makeUnderline() {
+            console.log('Underline clicked');
+            alert('Underline works!');
+        }
+        
+        // Debug
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Simple editor loaded');
+            console.log('Touch support:', 'ontouchstart' in window);
+        });
+    </script>
+</body>
+</html>
