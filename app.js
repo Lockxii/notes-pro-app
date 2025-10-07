@@ -50,8 +50,7 @@ function setupEventListeners() {
     const fileInput = document.getElementById('file-input');
     
     // Gestion du focus sur l'éditeur (mobile et desktop)
-    editor.addEventListener('focus', showToolbarOnFocus);
-    editor.addEventListener('blur', hideToolbarOnBlur);
+    // Toolbar toujours visible maintenant
     
     // Gestion spéciale pour mobile
     editor.addEventListener('touchstart', function(e) {
@@ -691,11 +690,10 @@ function saveCurrentNote() {
     if (!currentNoteId) return;
     
     const editor = document.getElementById('editor');
-    const content = editor.innerHTML;
-    const textContent = editor.textContent || editor.innerText || '';
+    const content = editor.value; // Utiliser .value pour textarea
     
     // Extraire un titre (premiers mots du contenu)
-    const title = textContent.substring(0, 50).trim() || 'Note sans titre';
+    const title = content.substring(0, 50).trim() || 'Note sans titre';
     
     notes[currentNoteId] = {
         ...notes[currentNoteId],
@@ -704,6 +702,7 @@ function saveCurrentNote() {
         modified: new Date().toISOString()
     };
     
+    console.log('Note sauvée:', title, content.length + ' caractères');
     saveToStorage();
     
     // Feedback visuel
@@ -727,7 +726,7 @@ function autoSave() {
 function saveToUndoHistory() {
     const editor = document.getElementById('editor');
     const currentState = {
-        content: editor.innerHTML,
+        content: editor.value, // Utiliser .value pour textarea
         timestamp: Date.now()
     };
     
@@ -765,7 +764,7 @@ function undoLastAction() {
     
     if (previousState) {
         const editor = document.getElementById('editor');
-        editor.innerHTML = previousState.content;
+        editor.value = previousState.content; // Utiliser .value pour textarea
         
         // Feedback visuel de succès
         const undoBtn = document.querySelector('.undo-btn');
@@ -801,7 +800,9 @@ function loadNote(noteId) {
     currentNoteId = noteId;
     const note = notes[noteId];
     const editor = document.getElementById('editor');
-    editor.innerHTML = note.content;
+    editor.value = note.content; // Utiliser .value pour textarea
+    
+    console.log('Note chargée:', note.title, note.content.length + ' caractères');
     
     // Réinitialiser l'historique pour la nouvelle note
     undoHistory = [];
