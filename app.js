@@ -182,8 +182,9 @@ function setupEventListeners() {
     document.getElementById('save-btn').addEventListener('click', function(e) {
         e.preventDefault();
         e.stopPropagation();
-        console.log('Save cliqué');
+        console.log('Save button cliqué - début');
         saveCurrentNote();
+        console.log('Save button cliqué - fin');
     });
 
     document.querySelector('.notes-btn').addEventListener('click', function(e) {
@@ -676,7 +677,9 @@ function createNewNote() {
     currentNoteId = noteId;
     
     // Vider l'éditeur
-    document.getElementById('editor').innerHTML = '';
+    document.getElementById('editor').value = '';
+    
+    console.log('Nouvelle note créée:', noteId);
     
     // Réinitialiser l'historique pour la nouvelle note
     undoHistory = [];
@@ -687,18 +690,23 @@ function createNewNote() {
 }
 
 function saveCurrentNote() {
-    if (!currentNoteId) return;
-    
     const editor = document.getElementById('editor');
     const content = editor.value; // Utiliser .value pour textarea
+    
+    // Si pas de note courante, créer une nouvelle note
+    if (!currentNoteId) {
+        currentNoteId = 'note_' + Date.now();
+        console.log('Création nouvelle note:', currentNoteId);
+    }
     
     // Extraire un titre (premiers mots du contenu)
     const title = content.substring(0, 50).trim() || 'Note sans titre';
     
     notes[currentNoteId] = {
-        ...notes[currentNoteId],
+        id: currentNoteId,
         title: title,
         content: content,
+        created: notes[currentNoteId]?.created || new Date().toISOString(),
         modified: new Date().toISOString()
     };
     

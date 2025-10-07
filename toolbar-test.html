@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <title>Test Toolbar Position</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, Arial, sans-serif;
+            height: 100vh;
+            height: 100dvh;
+            background: #f5f5f5;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .header {
+            background: #007AFF;
+            color: white;
+            padding: 15px;
+            text-align: center;
+            font-weight: bold;
+        }
+        
+        .editor-area {
+            flex: 1;
+            padding: 20px;
+            background: white;
+            overflow: auto;
+        }
+        
+        textarea {
+            width: 100%;
+            height: 100%;
+            border: none;
+            outline: none;
+            font-size: 16px;
+            resize: none;
+            background: transparent;
+        }
+        
+        .toolbar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: #f8f8f8;
+            border-top: 1px solid #ddd;
+            padding: 15px;
+            z-index: 1000;
+            
+            /* Essayer de rester au-dessus du clavier */
+            bottom: env(keyboard-inset-height, 0px);
+        }
+        
+        .toolbar-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+        
+        .toolbar button {
+            background: #007AFF;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            min-height: 44px;
+        }
+        
+        .toolbar button:active {
+            background: #0056d6;
+            transform: scale(0.95);
+        }
+        
+        .status {
+            background: #e8f4fd;
+            padding: 10px;
+            margin: 10px 20px;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+        
+        /* Alternative pour iOS */
+        @supports (-webkit-touch-callout: none) {
+            .toolbar {
+                position: -webkit-sticky;
+                position: sticky;
+                bottom: 0;
+            }
+        }
+        
+        /* Quand l'écran devient petit (clavier ouvert) */
+        @media screen and (max-height: 500px) {
+            .toolbar {
+                position: relative;
+                bottom: auto;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        Test Position Toolbar
+    </div>
+    
+    <div class="status" id="status">
+        Tapez dans la zone de texte et vérifiez si la toolbar reste visible
+    </div>
+    
+    <div class="editor-area">
+        <textarea id="editor" placeholder="Tapez ici pour tester..."></textarea>
+    </div>
+    
+    <div class="toolbar">
+        <div class="toolbar-buttons">
+            <button id="bold-btn">B</button>
+            <button id="save-btn">💾 Save</button>
+            <button id="test-btn">Test</button>
+        </div>
+    </div>
+
+    <script>
+        const editor = document.getElementById('editor');
+        const status = document.getElementById('status');
+        const saveBtn = document.getElementById('save-btn');
+        const testBtn = document.getElementById('test-btn');
+        
+        function updateStatus(msg) {
+            status.textContent = msg;
+            console.log(msg);
+        }
+        
+        editor.addEventListener('focus', () => {
+            updateStatus('Éditeur focusé - clavier ouvert - toolbar visible ?');
+        });
+        
+        editor.addEventListener('blur', () => {
+            updateStatus('Éditeur pas focusé - clavier fermé');
+        });
+        
+        editor.addEventListener('input', () => {
+            updateStatus(`Texte: "${editor.value.substring(0, 30)}..." (${editor.value.length} chars)`);
+        });
+        
+        saveBtn.addEventListener('click', () => {
+            const content = editor.value;
+            localStorage.setItem('test-note', content);
+            saveBtn.textContent = '✅ Sauvé';
+            saveBtn.style.background = '#34C759';
+            updateStatus(`Sauvé: ${content.length} caractères`);
+            
+            setTimeout(() => {
+                saveBtn.textContent = '💾 Save';
+                saveBtn.style.background = '#007AFF';
+            }, 1500);
+        });
+        
+        testBtn.addEventListener('click', () => {
+            const saved = localStorage.getItem('test-note') || '';
+            updateStatus(`Test: ${saved.length} chars sauvés, hauteur écran: ${window.innerHeight}px`);
+        });
+        
+        // Charger le contenu sauvé
+        window.addEventListener('load', () => {
+            const saved = localStorage.getItem('test-note');
+            if (saved) {
+                editor.value = saved;
+                updateStatus(`Chargé: ${saved.length} caractères`);
+            }
+        });
+        
+        // Détecter les changements de taille d'écran (clavier)
+        window.addEventListener('resize', () => {
+            updateStatus(`Écran redimensionné: ${window.innerHeight}px`);
+        });
+    </script>
+</body>
+</html>
