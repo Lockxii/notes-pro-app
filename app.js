@@ -45,13 +45,23 @@ function setupEventListeners() {
     colorInput.addEventListener('change', applyTextColor);
     
     // Éviter la perte de focus lors de l'interaction avec la barre d'outils
-    const toolbarElements = document.querySelectorAll('.toolbar-container select, .toolbar-container button, .toolbar-container input');
-    toolbarElements.forEach(element => {
-        element.addEventListener('mousedown', function(e) {
+    const toolbarButtons = document.querySelectorAll('.toolbar-container button');
+    toolbarButtons.forEach(button => {
+        button.addEventListener('mousedown', function(e) {
             e.preventDefault(); // Empêcher la perte de focus de l'éditeur
         });
-        element.addEventListener('touchstart', function(e) {
+        button.addEventListener('touchstart', function(e) {
             e.preventDefault(); // Empêcher la perte de focus sur mobile
+        });
+    });
+    
+    // Pour les selects, on garde le comportement normal mais on gère différemment
+    const toolbarSelects = document.querySelectorAll('.toolbar-container select');
+    toolbarSelects.forEach(select => {
+        select.addEventListener('focus', function() {
+            // Garder la barre d'outils visible quand on utilise un select
+            const toolbarContainer = document.getElementById('toolbar-container');
+            toolbarContainer.classList.add('show');
         });
     });
     
@@ -85,15 +95,19 @@ function hideToolbarOnBlur() {
     setTimeout(() => {
         // Ne pas cacher la barre d'outils si on interagit avec elle
         const activeElement = document.activeElement;
-        if (!activeElement.closest('.toolbar-container') && 
-            !activeElement.classList.contains('font-select') &&
-            !activeElement.classList.contains('size-select') &&
-            !activeElement.classList.contains('color-input')) {
+        const isToolbarElement = activeElement && (
+            activeElement.closest('.toolbar-container') ||
+            activeElement.classList.contains('font-select') ||
+            activeElement.classList.contains('size-select') ||
+            activeElement.classList.contains('color-input')
+        );
+        
+        if (!isToolbarElement) {
             const toolbarContainer = document.getElementById('toolbar-container');
             toolbarContainer.classList.remove('show');
             toolbarVisible = false;
         }
-    }, 150);
+    }, 200);
 }
 
 function toggleToolbar() {
@@ -123,7 +137,11 @@ function toggleFormat(command) {
 }
 
 function applyFontFamily() {
-    const fontFamily = document.getElementById('font-select').value;
+    const fontSelect = document.getElementById('font-select');
+    const fontFamily = fontSelect.value;
+    
+    console.log('Applying font family:', fontFamily); // Debug
+    
     const selection = window.getSelection();
     const savedSelection = saveSelection();
     
@@ -148,17 +166,23 @@ function applyFontFamily() {
         editor.style.fontFamily = fontFamily;
     }
     
+    // Forcer le focus sur l'éditeur
     setTimeout(() => {
-        document.getElementById('editor').focus();
-    }, 10);
+        const editor = document.getElementById('editor');
+        editor.focus();
+        autoSave(); // Sauvegarder les changements
+    }, 50);
 }
 
 function applyFontSize() {
-    const fontSize = document.getElementById('size-select').value;
+    const sizeSelect = document.getElementById('size-select');
+    const fontSize = sizeSelect.value;
     currentFontSize = parseInt(fontSize);
     
+    console.log('Applying font size:', fontSize + 'px'); // Debug
+    
     const selection = window.getSelection();
-    const savedSelection = saveSelection(); // Sauvegarder la sélection
+    const savedSelection = saveSelection();
     
     if (selection.rangeCount > 0 && !selection.isCollapsed) {
         // Appliquer à la sélection existante
@@ -178,27 +202,27 @@ function applyFontSize() {
         // Restaurer la sélection
         restoreSelection(savedSelection);
     } else {
-        // Définir la taille pour le prochain texte
-        const editor = document.getElementById('editor');
-        const tempSpan = document.createElement('span');
-        tempSpan.style.fontSize = fontSize + 'px';
-        tempSpan.className = 'temp-font-size';
-        
-        // Insérer un marqueur temporaire
-        if (selection.rangeCount > 0) {
-            const range = selection.getRangeAt(0);
-            range.insertNode(tempSpan);
-            range.setStartAfter(tempSpan);
-            range.collapse(true);
-            selection.removeAllRanges();
-            selection.addRange(range);
-        }
+        // Définir la taille pour le prochain texte en utilisant execCommand
+        document.execCommand('fontSize', false, '7'); // Taille temporaire
+        // Remplacer par la vraie taille
+        setTimeout(() => {
+            const editor = document.getElementById('editor');
+            const fontElements = editor.querySelectorAll('font[size="7"]');
+            fontElements.forEach(el => {
+                const span = document.createElement('span');
+                span.style.fontSize = fontSize + 'px';
+                span.innerHTML = el.innerHTML;
+                el.parentNode.replaceChild(span, el);
+            });
+        }, 10);
     }
     
-    // Ne pas perdre le focus
+    // Forcer le focus sur l'éditeur
     setTimeout(() => {
-        document.getElementById('editor').focus();
-    }, 10);
+        const editor = document.getElementById('editor');
+        editor.focus();
+        autoSave(); // Sauvegarder les changements
+    }, 50);
 }
 
 // Fonction pour sauvegarder la sélection
