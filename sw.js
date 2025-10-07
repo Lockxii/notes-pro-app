@@ -1,4 +1,4 @@
-const CACHE_NAME = 'notes-pro-v1';
+const CACHE_NAME = 'notes-pro-v2';
 const urlsToCache = [
     '/',
     '/index.html',

@@ -7,6 +7,9 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="apple-mobile-web-app-title" content="Notes Pro">
     <meta name="theme-color" content="#007AFF">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
     
     <title>Notes Pro</title>
     <link rel="manifest" href="manifest.json">
@@ -66,11 +69,17 @@
             background: rgba(255,255,255,0.2);
             border: none;
             color: white;
-            padding: 8px 15px;
+            padding: 12px 16px;
             border-radius: 15px;
-            font-size: 14px;
+            font-size: 16px;
             cursor: pointer;
             transition: all 0.2s;
+            min-width: 44px;
+            min-height: 44px;
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
+            -webkit-user-select: none;
+            user-select: none;
         }
         
         .theme-btn, .undo-btn {
@@ -166,18 +175,28 @@
             background: #007AFF;
             color: white;
             border: none;
-            padding: 8px 12px;
+            padding: 12px 16px;
             border-radius: 12px;
-            font-size: 14px;
+            font-size: 16px;
             cursor: pointer;
             transition: all 0.2s;
-            min-width: 40px;
-            -webkit-tap-highlight-color: rgba(0,0,0,0.1);
+            min-width: 44px;
+            min-height: 44px;
+            -webkit-tap-highlight-color: transparent;
             touch-action: manipulation;
+            -webkit-user-select: none;
+            user-select: none;
         }
         
-        .toolbar-btn:hover {
+        .toolbar-btn:hover,
+        .toolbar-btn:active {
             background: #0056CC;
+            transform: scale(0.95);
+        }
+        
+        .toolbar-btn:focus {
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(0, 122, 255, 0.3);
         }
         
         .toolbar-btn.active {
@@ -187,12 +206,14 @@
         .font-select, .size-select, .color-input {
             border: 1px solid #e0e0e0;
             border-radius: 8px;
-            padding: 8px 10px;
-            font-size: 14px;
+            padding: 12px 10px;
+            font-size: 16px;
             margin: 0 2px;
             background: white;
             cursor: pointer;
             touch-action: manipulation;
+            min-height: 44px;
+            -webkit-tap-highlight-color: transparent;
         }
         
         .font-select, .size-select {

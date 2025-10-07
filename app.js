@@ -8,8 +8,20 @@ let isDarkMode = localStorage.getItem('darkMode') === 'true';
 let undoHistory = [];
 let maxUndoSteps = 20;
 
+// Debug pour mobile
+function showDebugInfo() {
+    const info = {
+        userAgent: navigator.userAgent,
+        touchSupport: 'ontouchstart' in window,
+        viewport: window.innerWidth + 'x' + window.innerHeight,
+        devicePixelRatio: window.devicePixelRatio
+    };
+    console.log('Device Info:', info);
+}
+
 // Initialisation de l'app
 document.addEventListener('DOMContentLoaded', function() {
+    showDebugInfo();
     initializeApp();
     setupEventListeners();
     loadLastNote();
@@ -37,33 +49,52 @@ function setupEventListeners() {
     const colorInput = document.getElementById('color-input');
     const fileInput = document.getElementById('file-input');
     
-    // Gestion du focus sur l'éditeur
+    // Gestion du focus sur l'éditeur (mobile et desktop)
     editor.addEventListener('focus', showToolbarOnFocus);
     editor.addEventListener('blur', hideToolbarOnBlur);
+    editor.addEventListener('touchstart', showToolbarOnFocus);
+    editor.addEventListener('click', showToolbarOnFocus);
     
     // Gestion des changements de format
     fontSelect.addEventListener('change', applyFontFamily);
     sizeSelect.addEventListener('change', applyFontSize);
     colorInput.addEventListener('change', applyTextColor);
     
-    // Éviter la perte de focus lors de l'interaction avec la barre d'outils
+    // Améliorer les interactions tactiles
     const toolbarButtons = document.querySelectorAll('.toolbar-container button');
     toolbarButtons.forEach(button => {
-        button.addEventListener('mousedown', function(e) {
-            e.preventDefault(); // Empêcher la perte de focus de l'éditeur
-        });
+        // Touch events pour mobile
         button.addEventListener('touchstart', function(e) {
-            e.preventDefault(); // Empêcher la perte de focus sur mobile
+            this.style.transform = 'scale(0.95)';
+            this.style.opacity = '0.8';
+        });
+        
+        button.addEventListener('touchend', function(e) {
+            this.style.transform = 'scale(1)';
+            this.style.opacity = '1';
+        });
+        
+        // Empêcher la perte de focus
+        button.addEventListener('mousedown', function(e) {
+            e.preventDefault();
         });
     });
     
-    // Pour les selects, on garde le comportement normal mais on gère différemment
+    // Améliorer les selects pour mobile
     const toolbarSelects = document.querySelectorAll('.toolbar-container select');
     toolbarSelects.forEach(select => {
         select.addEventListener('focus', function() {
-            // Garder la barre d'outils visible quand on utilise un select
             const toolbarContainer = document.getElementById('toolbar-container');
             toolbarContainer.classList.add('show');
+        });
+        
+        // Améliorer la réactivité tactile
+        select.addEventListener('touchstart', function() {
+            this.style.transform = 'scale(1.02)';
+        });
+        
+        select.addEventListener('touchend', function() {
+            this.style.transform = 'scale(1)';
         });
     });
     
