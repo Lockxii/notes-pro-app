@@ -56,7 +56,12 @@
         <button onclick="makeUnderline()">U</button>
     </div>
     
-    <textarea class="editor" id="editor" placeholder="Tapez votre texte ici..."></textarea>
+    <textarea class="editor" id="editor" placeholder="Tapez votre texte ici..." autofocus></textarea>
+    
+    <div style="padding: 20px; color: #666; font-size: 14px;">
+        <p>Debug info:</p>
+        <p id="debug"></p>
+    </div>
     
     <script>
         function makeBold() {
@@ -104,6 +109,14 @@
         document.addEventListener('DOMContentLoaded', function() {
             console.log('Simple editor loaded');
             console.log('Touch support:', 'ontouchstart' in window);
+            
+            const debug = document.getElementById('debug');
+            debug.innerHTML = `
+                Touch: ${'ontouchstart' in window ? 'YES' : 'NO'}<br>
+                User Agent: ${navigator.userAgent.includes('iPhone') ? 'iPhone' : 'Other'}<br>
+                Viewport: ${window.innerWidth}x${window.innerHeight}<br>
+                URL: ${window.location.href}
+            `;
         });
     </script>
 </body>

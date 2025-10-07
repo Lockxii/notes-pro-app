@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <title>Test Input</title>
+    <style>
+        body { 
+            font-family: -apple-system; 
+            background: #000; 
+            color: #fff; 
+            padding: 20px; 
+        }
+        input, textarea { 
+            width: 100%; 
+            padding: 15px; 
+            font-size: 16px; 
+            border: 1px solid #333; 
+            background: #111; 
+            color: #fff; 
+            border-radius: 10px; 
+            margin: 10px 0; 
+        }
+        button { 
+            background: #007AFF; 
+            color: white; 
+            border: none; 
+            padding: 15px 25px; 
+            border-radius: 10px; 
+            font-size: 18px; 
+            margin: 10px 5px; 
+            min-width: 60px; 
+            min-height: 60px; 
+        }
+        button:active { 
+            background: #0056CC; 
+            transform: scale(0.9); 
+        }
+    </style>
+</head>
+<body>
+    <h1>Test Ultra Simple</h1>
+    
+    <p>URL actuelle: <span id="url"></span></p>
+    
+    <input type="text" placeholder="Input test" id="input" autofocus>
+    <textarea placeholder="Textarea test" rows="5" id="textarea"></textarea>
+    
+    <div>
+        <button onclick="testAlert()">Alert</button>
+        <button onclick="testLog()">Log</button>
+        <button onclick="testInput()">Test Input</button>
+    </div>
+    
+    <div id="results" style="margin-top: 20px; padding: 10px; background: #222; border-radius: 5px;"></div>
+    
+    <script>
+        document.getElementById('url').textContent = window.location.href;
+        
+        function testAlert() {
+            alert('Alert fonctionne !');
+        }
+        
+        function testLog() {
+            console.log('Log test');
+            document.getElementById('results').innerHTML += '<p>Log écrit dans console</p>';
+        }
+        
+        function testInput() {
+            const input = document.getElementById('input');
+            const textarea = document.getElementById('textarea');
+            document.getElementById('results').innerHTML = `
+                <p>Input value: "${input.value}"</p>
+                <p>Textarea value: "${textarea.value}"</p>
+                <p>Time: ${new Date().toLocaleTimeString()}</p>
+            `;
+        }
+        
+        // Auto focus test
+        setTimeout(() => {
+            document.getElementById('input').focus();
+        }, 500);
+    </script>
+</body>
+</html>

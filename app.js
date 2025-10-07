@@ -52,8 +52,29 @@ function setupEventListeners() {
     // Gestion du focus sur l'éditeur (mobile et desktop)
     editor.addEventListener('focus', showToolbarOnFocus);
     editor.addEventListener('blur', hideToolbarOnBlur);
-    editor.addEventListener('touchstart', showToolbarOnFocus);
-    editor.addEventListener('click', showToolbarOnFocus);
+    
+    // Gestion spéciale pour mobile
+    editor.addEventListener('touchstart', function(e) {
+        console.log('Editor touched');
+        this.focus();
+        
+        // Forcer l'apparition du clavier sur iOS
+        const mobileTextarea = document.getElementById('mobile-textarea');
+        if (mobileTextarea) {
+            mobileTextarea.focus();
+            setTimeout(() => {
+                editor.focus();
+            }, 100);
+        }
+        
+        showToolbarOnFocus();
+    });
+    
+    editor.addEventListener('click', function(e) {
+        console.log('Editor clicked');
+        this.focus();
+        showToolbarOnFocus();
+    });
     
     // Gestion des changements de format
     fontSelect.addEventListener('change', applyFontFamily);
@@ -129,6 +150,20 @@ function setupEventListeners() {
     
     // Sauvegarde automatique
     editor.addEventListener('input', debounce(autoSave, 1000));
+    
+    // Améliorer les boutons de l'en-tête pour mobile
+    const headerButtons = document.querySelectorAll('.header button');
+    headerButtons.forEach(button => {
+        button.addEventListener('touchstart', function(e) {
+            this.style.transform = 'scale(0.95)';
+            this.style.background = 'rgba(255,255,255,0.4)';
+        });
+        
+        button.addEventListener('touchend', function(e) {
+            this.style.transform = 'scale(1)';
+            this.style.background = 'rgba(255,255,255,0.2)';
+        });
+    });
     
     // Gestion des touches clavier
     document.addEventListener('keydown', handleKeyboard);
