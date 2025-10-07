@@ -75,15 +75,17 @@
             font-weight: 600;
             cursor: pointer;
             transition: all 0.2s;
-            min-width: 50px;
-            min-height: 50px;
-            -webkit-tap-highlight-color: transparent;
+            min-width: 60px;
+            min-height: 60px;
+            -webkit-tap-highlight-color: rgba(255,255,255,0.3);
             touch-action: manipulation;
             -webkit-user-select: none;
             user-select: none;
             display: flex;
             align-items: center;
             justify-content: center;
+            position: relative;
+            z-index: 100;
         }
         
         .theme-btn, .undo-btn {
@@ -98,6 +100,20 @@
         
         .notes-list-btn:hover, .save-btn:hover, .theme-btn:hover, .undo-btn:hover {
             background: rgba(255,255,255,0.3);
+        }
+        
+        .notes-list-btn:active, .save-btn:active, .theme-btn:active, .undo-btn:active {
+            background: rgba(255,255,255,0.5);
+            transform: scale(0.95);
+        }
+        
+        /* Styles pour les indicateurs tactiles */
+        @media (pointer: coarse) {
+            .notes-list-btn, .save-btn, .theme-btn, .undo-btn {
+                min-width: 70px;
+                min-height: 70px;
+                padding: 20px;
+            }
         }
         
         .editor-container {
@@ -130,7 +146,7 @@
             background: rgba(0,122,255,0.05);
         }
         
-        .editor[contenteditable] {
+        .editor {
             min-height: calc(100vh - 200px);
         }
         
@@ -490,15 +506,14 @@
             <button class="notes-list-btn" onclick="showNotesList()">📝 Notes</button>
             <h1>Notes Pro</h1>
             <div class="header-controls">
-                <button class="undo-btn" onclick="undoLastAction()" title="Annuler">↶</button>
-                <button class="theme-btn" onclick="toggleTheme()">🌙</button>
-                <button class="save-btn" onclick="saveCurrentNote()">💾 Sauver</button>
+                <button class="undo-btn" id="undo-btn" title="Annuler">↶</button>
+                <button class="theme-btn" id="theme-btn">🌙</button>
+                <button class="save-btn" id="save-btn">💾 Sauver</button>
             </div>
         </div>
         
         <div class="editor-container">
-            <div class="editor" contenteditable="true" id="editor" placeholder="Commencez à écrire votre note..."></div>
-            <textarea id="mobile-textarea" style="position: absolute; left: -9999px; opacity: 0; pointer-events: none;"></textarea>
+            <textarea class="editor" id="editor" placeholder="Commencez à écrire votre note..."></textarea>
         </div>
         
         <div class="toolbar-container" id="toolbar-container">

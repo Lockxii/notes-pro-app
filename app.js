@@ -165,6 +165,64 @@ function setupEventListeners() {
         });
     });
     
+    // Event listeners spécifiques pour les boutons du header
+    document.getElementById('undo-btn').addEventListener('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        console.log('Undo cliqué');
+        undoLastAction();
+    });
+
+    document.getElementById('theme-btn').addEventListener('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        console.log('Theme cliqué');
+        toggleTheme();
+    });
+
+    document.getElementById('save-btn').addEventListener('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        console.log('Save cliqué');
+        saveCurrentNote();
+    });
+
+    document.querySelector('.notes-btn').addEventListener('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        console.log('Notes cliqué');
+        toggleNotesModal();
+    });
+
+    // Event listeners tactiles pour les boutons header
+    document.getElementById('undo-btn').addEventListener('touchend', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        console.log('Undo touchend');
+        undoLastAction();
+    });
+
+    document.getElementById('theme-btn').addEventListener('touchend', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        console.log('Theme touchend');
+        toggleTheme();
+    });
+
+    document.getElementById('save-btn').addEventListener('touchend', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        console.log('Save touchend');
+        saveCurrentNote();
+    });
+
+    document.querySelector('.notes-btn').addEventListener('touchend', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        console.log('Notes touchend');
+        toggleNotesModal();
+    });
+    
     // Gestion des touches clavier
     document.addEventListener('keydown', handleKeyboard);
     
