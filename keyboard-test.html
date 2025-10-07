@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <title>Test Clavier</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, Arial, sans-serif;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        
+        .test-area {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        textarea {
+            width: 100%;
+            min-height: 200px;
+            border: 2px solid #007AFF;
+            border-radius: 8px;
+            padding: 15px;
+            font-size: 16px;
+            font-family: inherit;
+            resize: vertical;
+            outline: none;
+        }
+        
+        textarea:focus {
+            border-color: #0056d6;
+            box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.2);
+        }
+        
+        .buttons {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        button {
+            background: #007AFF;
+            color: white;
+            border: none;
+            padding: 15px 25px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            min-height: 50px;
+            min-width: 80px;
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: rgba(0, 122, 255, 0.3);
+        }
+        
+        button:active {
+            background: #0056d6;
+            transform: scale(0.95);
+        }
+        
+        .status {
+            padding: 10px;
+            background: #e8f4fd;
+            border-radius: 8px;
+            margin-top: 10px;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-area">
+        <h2>Test Clavier Mobile</h2>
+        <p>Tapez sur la zone de texte pour voir si le clavier apparaît :</p>
+        
+        <textarea id="text-area" placeholder="Tapez ici pour tester le clavier..."></textarea>
+        
+        <div class="buttons">
+            <button id="focus-btn">Focus</button>
+            <button id="clear-btn">Effacer</button>
+            <button id="test-btn">Test</button>
+        </div>
+        
+        <div class="status" id="status">
+            Prêt pour le test
+        </div>
+    </div>
+
+    <script>
+        const textarea = document.getElementById('text-area');
+        const focusBtn = document.getElementById('focus-btn');
+        const clearBtn = document.getElementById('clear-btn');
+        const testBtn = document.getElementById('test-btn');
+        const status = document.getElementById('status');
+        
+        function updateStatus(message) {
+            status.textContent = message;
+            console.log(message);
+        }
+        
+        // Event listeners pour textarea
+        textarea.addEventListener('focus', function() {
+            updateStatus('Textarea focusée - clavier devrait apparaître');
+        });
+        
+        textarea.addEventListener('blur', function() {
+            updateStatus('Textarea perdue le focus - clavier devrait disparaître');
+        });
+        
+        textarea.addEventListener('input', function() {
+            updateStatus(`Texte saisi: "${this.value}"`);
+        });
+        
+        textarea.addEventListener('touchstart', function() {
+            updateStatus('Touch start sur textarea');
+        });
+        
+        textarea.addEventListener('touchend', function() {
+            updateStatus('Touch end sur textarea');
+        });
+        
+        // Event listeners pour boutons
+        focusBtn.addEventListener('click', function() {
+            updateStatus('Tentative de focus sur textarea...');
+            textarea.focus();
+        });
+        
+        focusBtn.addEventListener('touchend', function(e) {
+            e.preventDefault();
+            updateStatus('Touch end - Tentative de focus sur textarea...');
+            textarea.focus();
+        });
+        
+        clearBtn.addEventListener('click', function() {
+            textarea.value = '';
+            updateStatus('Texte effacé');
+        });
+        
+        clearBtn.addEventListener('touchend', function(e) {
+            e.preventDefault();
+            textarea.value = '';
+            updateStatus('Touch end - Texte effacé');
+        });
+        
+        testBtn.addEventListener('click', function() {
+            const text = textarea.value || 'aucun texte';
+            updateStatus(`Test réussi! Contenu: "${text}"`);
+        });
+        
+        testBtn.addEventListener('touchend', function(e) {
+            e.preventDefault();
+            const text = textarea.value || 'aucun texte';
+            updateStatus(`Touch end - Test réussi! Contenu: "${text}"`);
+        });
+        
+        // Diagnostic initial
+        setTimeout(() => {
+            updateStatus('Page chargée - Prêt pour les tests');
+        }, 100);
+    </script>
+</body>
+</html>
