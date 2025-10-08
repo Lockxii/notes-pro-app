@@ -151,17 +151,13 @@ function setupEventListeners() {
         
         isEditing = true;
         
-        // Feedback visuel immédiat comme sur la page de test
-        readingView.style.background = '#ffe8e8';
-        readingView.style.borderColor = '#FF3B30';
-        noteContent.style.background = 'rgba(255,59,48,0.1)';
-        noteContent.textContent = '*** MODE ÉDITION ACTIVÉ ! ***';
+        // Feedback visuel très bref et discret
+        noteContent.style.background = 'rgba(0,122,255,0.2)';
+        noteContent.textContent = 'Ouverture de l\'éditeur...';
         
-        // Masquer la vue de lecture après un court délai
+        // Passer immédiatement en mode édition
         setTimeout(() => {
             readingView.style.display = 'none';
-            
-            // Afficher l'éditeur
             editor.classList.remove('hidden');
             
             // Focus avec un délai pour iOS
@@ -169,7 +165,7 @@ function setupEventListeners() {
                 editor.focus();
                 console.log('Éditeur focusé sur page principale');
             }, 100);
-        }, 500); // Plus de temps pour voir le feedback
+        }, 200); // Délai très court
     }
     
     // Sortir du mode édition
@@ -183,8 +179,11 @@ function setupEventListeners() {
         // Masquer l'éditeur
         editor.classList.add('hidden');
         
-        // Afficher la vue de lecture
+        // Remettre la vue de lecture normale
         readingView.style.display = 'block';
+        readingView.style.background = '';
+        readingView.style.borderColor = '';
+        noteContent.style.background = '';
         
         // Mettre à jour l'affichage
         updateReadingView();
