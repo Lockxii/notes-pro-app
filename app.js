@@ -88,55 +88,61 @@ function setupEventListeners() {
             noteContent.textContent = content;
             noteContent.classList.remove('empty');
         } else {
-            noteContent.textContent = 'Double-cliquez pour commencer à écrire...';
+            noteContent.textContent = 'Double-tapez pour commencer à écrire...';
             noteContent.classList.add('empty');
         }
     }
     
-    // Gestion du double-clic/tap sur la zone de lecture
-    noteContent.addEventListener('click', function(e) {
-        handleTapClick();
-    });
+    // Nouvelle approche plus simple pour le double-tap
+    let lastTapTime = 0;
+    const doubleTapDelay = 300; // 300ms entre les taps
     
-    // Support tactile pour mobile
-    noteContent.addEventListener('touchend', function(e) {
-        e.preventDefault();
-        handleTapClick();
-    });
-    
-    function handleTapClick() {
-        clickCount++;
+    // Gestion du double-tap sur toute la zone de lecture
+    readingView.addEventListener('touchstart', function(e) {
+        const currentTime = new Date().getTime();
+        const tapLength = currentTime - lastTapTime;
         
-        if (clickCount === 1) {
-            // Premier clic/tap - attendre pour voir s'il y a un deuxième
-            clickTimer = setTimeout(() => {
-                clickCount = 0;
-                // Simple clic/tap - ne rien faire, juste permettre le scroll
-                console.log('Simple tap - mode lecture');
-            }, 400); // Plus de temps sur mobile
-        } else if (clickCount === 2) {
-            // Double clic/tap - passer en mode édition
-            clearTimeout(clickTimer);
-            clickCount = 0;
+        if (tapLength < doubleTapDelay && tapLength > 0) {
+            // Double tap détecté !
+            console.log('Double tap détecté !');
+            e.preventDefault();
             enterEditMode();
+        } else {
+            // Premier tap ou tap trop espacé
+            console.log('Simple tap - lecture');
         }
-    }
+        
+        lastTapTime = currentTime;
+    });
+    
+    // Aussi pour les clics sur desktop
+    readingView.addEventListener('dblclick', function(e) {
+        console.log('Double clic détecté !');
+        enterEditMode();
+    });
     
     // Passer en mode édition
     function enterEditMode() {
-        console.log('Double-clic détecté - mode édition');
+        console.log('*** MODE ÉDITION ACTIVÉ ***');
         isEditing = true;
         
-        // Masquer la vue de lecture
-        readingView.style.display = 'none';
+        // Feedback visuel immédiat
+        noteContent.style.background = 'rgba(0,122,255,0.1)';
+        noteContent.textContent = 'Mode édition activé...';
         
-        // Afficher l'éditeur
-        editor.classList.remove('hidden');
-        
-        // Focus avec un délai pour iOS
+        // Masquer la vue de lecture après un court délai
         setTimeout(() => {
-            editor.focus();
-        }, 100);
+            readingView.style.display = 'none';
+            
+            // Afficher l'éditeur
+            editor.classList.remove('hidden');
+            
+            // Focus avec un délai pour iOS
+            setTimeout(() => {
+                editor.focus();
+                console.log('Éditeur focusé');
+            }, 100);
+        }, 200);
     }
     
     // Sortir du mode édition
