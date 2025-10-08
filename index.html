@@ -190,8 +190,8 @@
             background: #f8f8f8;
             border-top: 1px solid #e0e0e0;
             z-index: 9999;
-            padding: 15px;
-            padding-bottom: max(env(safe-area-inset-bottom), 15px);
+            padding: 10px 15px;
+            padding-bottom: max(env(safe-area-inset-bottom), 10px);
             /* SYSTÈME QUI MARCHE - copié de debug-toolbar */
             transition: bottom 0.3s ease;
             bottom: 0;
@@ -219,9 +219,9 @@
         }
         
         .toolbar {
-            padding: 10px 15px;
+            padding: 5px 0;
             display: flex;
-            gap: 10px;
+            gap: 8px;
             overflow-x: auto;
             -webkit-overflow-scrolling: touch;
         }
@@ -232,12 +232,12 @@
         
         .toolbar-group {
             display: flex;
-            gap: 5px;
+            gap: 4px;
             align-items: center;
             background: white;
-            padding: 8px 12px;
-            border-radius: 20px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            padding: 6px 10px;
+            border-radius: 15px;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.1);
             white-space: nowrap;
         }
         
@@ -245,17 +245,19 @@
             background: #007AFF;
             color: white;
             border: none;
-            padding: 12px 16px;
-            border-radius: 12px;
-            font-size: 16px;
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 14px;
             cursor: pointer;
             transition: all 0.2s;
-            min-width: 44px;
-            min-height: 44px;
+            min-width: 36px;
+            min-height: 36px;
             -webkit-tap-highlight-color: transparent;
             touch-action: manipulation;
             -webkit-user-select: none;
             user-select: none;
+            /* Empêcher la perte de focus */
+            -webkit-touch-callout: none;
         }
         
         .edit-btn {
@@ -283,15 +285,18 @@
         
         .font-select, .size-select, .color-input {
             border: 1px solid #e0e0e0;
-            border-radius: 8px;
-            padding: 12px 10px;
-            font-size: 16px;
-            margin: 0 2px;
+            border-radius: 6px;
+            padding: 8px 6px;
+            font-size: 14px;
+            margin: 0 1px;
             background: white;
             cursor: pointer;
             touch-action: manipulation;
-            min-height: 44px;
+            min-height: 36px;
             -webkit-tap-highlight-color: transparent;
+            /* Empêcher la perte de focus */
+            -webkit-user-select: none;
+            user-select: none;
         }
         
         .font-select, .size-select {

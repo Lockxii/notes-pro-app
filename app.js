@@ -214,10 +214,23 @@ function setupEventListeners() {
     // Initialiser l'affichage
     updateReadingView();
     
-    // Gestion des changements de format
+    // Gestion des changements de format avec prévention de désélection
     fontSelect.addEventListener('change', applyFontFamily);
     sizeSelect.addEventListener('change', applyFontSize);
     colorInput.addEventListener('change', applyTextColor);
+    
+    // Empêcher la désélection lors du clic sur les contrôles
+    [fontSelect, sizeSelect, colorInput].forEach(control => {
+        control.addEventListener('mousedown', (e) => {
+            // Empêcher la perte de focus
+            e.stopPropagation();
+        });
+        
+        control.addEventListener('touchstart', (e) => {
+            // Empêcher la perte de focus sur mobile
+            e.stopPropagation();
+        }, { passive: true });
+    });
     
     // Améliorer les interactions tactiles
     const toolbarButtons = document.querySelectorAll('.toolbar-container button');
@@ -426,25 +439,36 @@ function toggleToolbar() {
 // Fonctions de formatage de texte
 function toggleFormat(command) {
     try {
-        const selection = window.getSelection();
-        const savedSelection = saveSelection();
+        const editor = document.getElementById('editor');
+        if (!editor) return;
         
-        document.execCommand(command, false, null);
-        updateToolbarState();
+        // Sauvegarder la sélection
+        const selectionStart = editor.selectionStart;
+        const selectionEnd = editor.selectionEnd;
+        const selectedText = editor.value.substring(selectionStart, selectionEnd);
         
-        // Restaurer la sélection si elle existait
-        if (savedSelection && selection.rangeCount > 0 && !selection.isCollapsed) {
-            setTimeout(() => {
-                restoreSelection(savedSelection);
-            }, 10);
+        if (selectedText.length > 0) {
+            let tag = '';
+            switch(command) {
+                case 'bold': tag = 'b'; break;
+                case 'italic': tag = 'i'; break;
+                case 'underline': tag = 'u'; break;
+            }
+            
+            if (tag) {
+                const beforeText = editor.value.substring(0, selectionStart);
+                const afterText = editor.value.substring(selectionEnd);
+                const styledText = `<${tag}>${selectedText}</${tag}>`;
+                
+                editor.value = beforeText + styledText + afterText;
+                
+                // Restaurer la sélection étendue
+                editor.setSelectionRange(selectionStart, selectionStart + styledText.length);
+            }
         }
         
-        setTimeout(() => {
-            const editor = document.getElementById('editor');
-            if (editor) {
-                editor.focus();
-            }
-        }, 50);
+        // Maintenir le focus
+        editor.focus();
         
         // Sauvegarder les changements
         autoSave();
@@ -456,97 +480,74 @@ function toggleFormat(command) {
 function applyFontFamily() {
     try {
         const fontSelect = document.getElementById('font-select');
-        if (!fontSelect) return;
+        const editor = document.getElementById('editor');
+        if (!fontSelect || !editor) return;
         
         const fontFamily = fontSelect.value;
-        const selection = window.getSelection();
-        const savedSelection = saveSelection();
-    
-    if (selection.rangeCount > 0 && !selection.isCollapsed) {
-        const range = selection.getRangeAt(0);
-        const span = document.createElement('span');
-        span.style.fontFamily = fontFamily;
         
-        try {
-            range.surroundContents(span);
-        } catch (e) {
-            const contents = range.extractContents();
-            span.appendChild(contents);
-            range.insertNode(span);
-        }
+        // Sauvegarder la sélection du textarea
+        const selectionStart = editor.selectionStart;
+        const selectionEnd = editor.selectionEnd;
+        const selectedText = editor.value.substring(selectionStart, selectionEnd);
         
-        // Restaurer la sélection
-        restoreSelection(savedSelection);
-    } else {
-        // Pour le prochain texte
-        const editor = document.getElementById('editor');
-        if (editor) {
+        if (selectedText.length > 0) {
+            // Appliquer la police au texte sélectionné
+            const beforeText = editor.value.substring(0, selectionStart);
+            const afterText = editor.value.substring(selectionEnd);
+            const styledText = `<span style="font-family: ${fontFamily};">${selectedText}</span>`;
+            
+            editor.value = beforeText + styledText + afterText;
+            
+            // Restaurer la sélection
+            editor.setSelectionRange(selectionStart, selectionStart + styledText.length);
+        } else {
+            // Appliquer la police globale
             editor.style.fontFamily = fontFamily;
         }
-    }
-    
-    // Forcer le focus sur l'éditeur
-    setTimeout(() => {
-        const editor = document.getElementById('editor');
-        if (editor) {
-            editor.focus();
-        }
-        autoSave(); // Sauvegarder les changements
-    }, 50);
+        
+        // Maintenir le focus
+        editor.focus();
+        autoSave();
     } catch (error) {
         console.log('Font family error:', error);
     }
 }
 
 function applyFontSize() {
-    const sizeSelect = document.getElementById('size-select');
-    const fontSize = sizeSelect.value;
-    currentFontSize = parseInt(fontSize);
-    
-
-    
-    const selection = window.getSelection();
-    const savedSelection = saveSelection();
-    
-    if (selection.rangeCount > 0 && !selection.isCollapsed) {
-        // Appliquer à la sélection existante
-        const range = selection.getRangeAt(0);
-        const span = document.createElement('span');
-        span.style.fontSize = fontSize + 'px';
+    try {
+        const sizeSelect = document.getElementById('size-select');
+        const editor = document.getElementById('editor');
+        if (!sizeSelect || !editor) return;
         
-        try {
-            range.surroundContents(span);
-        } catch (e) {
-            // Si la sélection traverse plusieurs éléments
-            const contents = range.extractContents();
-            span.appendChild(contents);
-            range.insertNode(span);
+        const fontSize = sizeSelect.value;
+        currentFontSize = parseInt(fontSize);
+        
+        // Sauvegarder la sélection du textarea
+        const selectionStart = editor.selectionStart;
+        const selectionEnd = editor.selectionEnd;
+        const selectedText = editor.value.substring(selectionStart, selectionEnd);
+        
+        if (selectedText.length > 0) {
+            // Appliquer la taille au texte sélectionné
+            const beforeText = editor.value.substring(0, selectionStart);
+            const afterText = editor.value.substring(selectionEnd);
+            const styledText = `<span style="font-size: ${fontSize}px;">${selectedText}</span>`;
+            
+            editor.value = beforeText + styledText + afterText;
+            
+            // Restaurer la sélection
+            editor.setSelectionRange(selectionStart, selectionStart + styledText.length);
+        } else {
+            // Appliquer la taille globale
+            editor.style.fontSize = fontSize + 'px';
         }
         
-        // Restaurer la sélection
-        restoreSelection(savedSelection);
-    } else {
-        // Définir la taille pour le prochain texte en utilisant execCommand
-        document.execCommand('fontSize', false, '7'); // Taille temporaire
-        // Remplacer par la vraie taille
-        setTimeout(() => {
-            const editor = document.getElementById('editor');
-            const fontElements = editor.querySelectorAll('font[size="7"]');
-            fontElements.forEach(el => {
-                const span = document.createElement('span');
-                span.style.fontSize = fontSize + 'px';
-                span.innerHTML = el.innerHTML;
-                el.parentNode.replaceChild(span, el);
-            });
-        }, 10);
-    }
-    
-    // Forcer le focus sur l'éditeur
-    setTimeout(() => {
-        const editor = document.getElementById('editor');
+        // Maintenir le focus
         editor.focus();
-        autoSave(); // Sauvegarder les changements
-    }, 50);
+        autoSave();
+    } catch (error) {
+        console.log('Font size error:', error);
+    }
 }
 
 // Fonction pour sauvegarder la sélection
