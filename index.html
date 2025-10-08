@@ -192,15 +192,14 @@
             z-index: 9999;
             padding: 15px;
             padding-bottom: max(env(safe-area-inset-bottom), 15px);
-            /* EXACTEMENT comme la barre bleue qui fonctionnait */
+            /* SYSTÈME QUI MARCHE - copié de debug-toolbar */
             transition: bottom 0.3s ease;
-            /* Par défaut en bas */
             bottom: 0;
             transform: translateZ(0);
             -webkit-transform: translateZ(0);
         }
         
-        /* Animation pour la toolbar */
+        /* Animation identique à celle qui marche */
         @keyframes slideUp {
             from { transform: translateY(100%); }
             to { transform: translateY(0); }

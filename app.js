@@ -1129,16 +1129,16 @@ function applyTheme() {
 document.addEventListener('selectionchange', updateToolbarState);
 
 // ============== SYSTÈME VISUAL VIEWPORT API POUR iOS ==============
-// COPIE EXACTE de la solution qui fonctionnait sur la page de test
+// COPIE EXACTE de debug-toolbar.html qui fonctionne parfaitement
 let keyboardHeight = 0;
 let initialViewportHeight = window.innerHeight;
 
-function adjustToolbarForKeyboard() {
+function adjustForKeyboard() {
     const toolbarContainer = document.getElementById('toolbar-container');
     if (!toolbarContainer) return;
     
     if (!window.visualViewport) {
-        console.log('Visual Viewport API non supporté - utilisation fallback');
+        console.log('Visual Viewport API non supporté');
         return;
     }
     
@@ -1146,63 +1146,34 @@ function adjustToolbarForKeyboard() {
     keyboardHeight = window.innerHeight - viewport.height;
     
     if (keyboardHeight > 100) {
-        // Clavier ouvert - positionner la toolbar au-dessus
+        // Clavier ouvert
         toolbarContainer.style.bottom = `${keyboardHeight}px`;
         toolbarContainer.classList.add('animated');
-        document.body.classList.add('keyboard-open');
-        console.log(`Clavier détecté: ${keyboardHeight}px - Toolbar ajustée`);
+        console.log(`Clavier: ${keyboardHeight}px - Toolbar ajustée`);
     } else {
         // Clavier fermé
         toolbarContainer.style.bottom = '0px';
         toolbarContainer.classList.remove('animated');
-        document.body.classList.remove('keyboard-open');
         console.log('Clavier fermé - Toolbar en bas');
     }
 }
 
-// MÉTHODE ALTERNATIVE pour les navigateurs sans Visual Viewport API
-let resizeTimeout;
-function handleResizeForKeyboard() {
-    clearTimeout(resizeTimeout);
-    resizeTimeout = setTimeout(() => {
-        const currentHeight = window.innerHeight;
-        const heightDiff = initialViewportHeight - currentHeight;
-        const toolbarContainer = document.getElementById('toolbar-container');
-        
-        if (heightDiff > 150) {
-            // Probablement le clavier
-            toolbarContainer.style.bottom = `${heightDiff - 50}px`;
-            toolbarContainer.classList.add('animated');
-            document.body.classList.add('keyboard-open');
-            console.log(`Resize détecté: ${heightDiff}px - Toolbar ajustée`);
-        } else {
-            toolbarContainer.style.bottom = '0px';
-            toolbarContainer.classList.remove('animated');
-            document.body.classList.remove('keyboard-open');
-            console.log(`Resize normal: ${currentHeight}px`);
-        }
-    }, 100);
-}
-
 // Initialisation du système de détection du clavier
 function initKeyboardDetection() {
-    // Visual Viewport API (iOS 13+)
+    // ÉVÉNEMENTS - IDENTIQUES À debug-toolbar.html
     if (window.visualViewport) {
-        window.visualViewport.addEventListener('resize', adjustToolbarForKeyboard);
-        window.visualViewport.addEventListener('scroll', adjustToolbarForKeyboard);
-        console.log('Visual Viewport API activé pour iOS');
+        window.visualViewport.addEventListener('resize', adjustForKeyboard);
+        window.visualViewport.addEventListener('scroll', adjustForKeyboard);
+        console.log('Visual Viewport API activé');
     } else {
-        console.log('Visual Viewport API non disponible - utilisation resize');
-        window.addEventListener('resize', handleResizeForKeyboard);
+        console.log('Visual Viewport API non disponible');
     }
     
-    // Focus/Blur sur l'éditeur - EXACTEMENT comme la page de test
     const editor = document.getElementById('editor');
     if (editor) {
         editor.addEventListener('focus', () => {
-            console.log('Éditeur focusé - détection clavier');
-            // Petit délai pour laisser le clavier s'ouvrir
-            setTimeout(adjustToolbarForKeyboard, 300);
+            console.log('Éditeur focusé');
+            setTimeout(adjustForKeyboard, 300);
         });
         
         editor.addEventListener('blur', () => {
@@ -1212,7 +1183,6 @@ function initKeyboardDetection() {
                 if (toolbarContainer) {
                     toolbarContainer.style.bottom = '0px';
                     toolbarContainer.classList.remove('animated');
-                    document.body.classList.remove('keyboard-open');
                 }
             }, 100);
         });
@@ -1223,14 +1193,20 @@ function initKeyboardDetection() {
         setTimeout(() => {
             initialViewportHeight = window.innerHeight;
             console.log(`Orientation changée - Nouvelle hauteur: ${initialViewportHeight}px`);
-            adjustToolbarForKeyboard();
+            adjustForKeyboard();
         }, 500);
     });
     
-    // Repositionnement périodique quand éditeur focusé (hack iOS)
+    // Debug périodique - comme debug-toolbar.html
     setInterval(() => {
         if (document.activeElement === document.getElementById('editor')) {
-            adjustToolbarForKeyboard();
+            adjustForKeyboard();
         }
-    }, 2000);
+    }, 1000);
+    
+    // Initialisation
+    window.addEventListener('load', () => {
+        initialViewportHeight = window.innerHeight;
+        console.log(`Chargé - H: ${initialViewportHeight}px, UA: ${navigator.userAgent.includes('iPhone') ? 'iPhone' : 'Autre'}`);
+    });
 }
