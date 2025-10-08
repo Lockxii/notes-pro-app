@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <title>Test Barre au-dessus Clavier iOS</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, Arial, sans-serif;
+            height: 100vh;
+            height: 100dvh;
+            background: #f5f5f5;
+            display: flex;
+            flex-direction: column;
+            padding-top: env(safe-area-inset-top);
+            padding-bottom: env(safe-area-inset-bottom);
+        }
+        
+        .header {
+            background: #007AFF;
+            color: white;
+            padding: 15px;
+            text-align: center;
+            font-weight: bold;
+            font-size: 18px;
+        }
+        
+        .content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .editor-area {
+            flex: 1;
+            padding: 20px;
+            background: white;
+            overflow: hidden;
+        }
+        
+        textarea {
+            width: 100%;
+            height: 100%;
+            border: 2px solid #007AFF;
+            border-radius: 8px;
+            padding: 15px;
+            font-size: 16px;
+            font-family: inherit;
+            resize: none;
+            outline: none;
+            background: white;
+        }
+        
+        textarea:focus {
+            border-color: #0056d6;
+            box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.2);
+        }
+        
+        /* MÉTHODE 1: Position fixe classique */
+        .toolbar-fixed {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: #f8f8f8;
+            border-top: 2px solid #007AFF;
+            padding: 15px;
+            z-index: 1000;
+            transform: translateZ(0);
+            -webkit-transform: translateZ(0);
+        }
+        
+        /* MÉTHODE 2: Position sticky dans un container */
+        .toolbar-sticky {
+            position: sticky;
+            position: -webkit-sticky;
+            bottom: 0;
+            background: #e8f4fd;
+            border-top: 2px solid #34C759;
+            padding: 15px;
+            z-index: 1000;
+        }
+        
+        /* MÉTHODE 3: Position relative avec flex */
+        .toolbar-flex {
+            background: #ffe8e8;
+            border-top: 2px solid #FF3B30;
+            padding: 15px;
+            flex-shrink: 0;
+        }
+        
+        /* MÉTHODE 4: Position avec env() */
+        .toolbar-env {
+            position: fixed;
+            bottom: env(keyboard-inset-height, 0px);
+            left: 0;
+            right: 0;
+            background: #f0e8ff;
+            border-top: 2px solid #8E44AD;
+            padding: 15px;
+            z-index: 1000;
+        }
+        
+        .toolbar-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .toolbar button {
+            background: #007AFF;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            min-height: 40px;
+            touch-action: manipulation;
+        }
+        
+        .toolbar button:active {
+            background: #0056d6;
+            transform: scale(0.95);
+        }
+        
+        .method-label {
+            font-weight: bold;
+            font-size: 12px;
+            color: #333;
+        }
+        
+        .status {
+            background: #333;
+            color: white;
+            padding: 10px;
+            font-family: monospace;
+            font-size: 12px;
+            margin: 10px 20px;
+            border-radius: 6px;
+        }
+        
+        /* Styles pour différents états */
+        .keyboard-open .toolbar-fixed {
+            /* Essayer de se positionner au-dessus du clavier */
+            bottom: 300px; /* Approximation hauteur clavier */
+        }
+        
+        @supports (height: 100dvh) {
+            .toolbar-dvh {
+                position: fixed;
+                bottom: calc(100vh - 100dvh);
+                left: 0;
+                right: 0;
+                background: #fff8e1;
+                border-top: 2px solid #FF9500;
+                padding: 15px;
+                z-index: 1000;
+            }
+        }
+        
+        /* Détection clavier ouvert */
+        @media screen and (max-height: 500px) {
+            .method-adaptive .toolbar-fixed {
+                position: absolute;
+                bottom: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        Test Barre au-dessus Clavier iOS
+    </div>
+    
+    <div class="status" id="status">
+        Tapez dans l'éditeur et vérifiez quelle barre reste visible au-dessus du clavier
+    </div>
+    
+    <div class="content">
+        <div class="editor-area">
+            <textarea id="editor" placeholder="Tapez ici pour ouvrir le clavier et tester les barres d'outils..."></textarea>
+        </div>
+        
+        <!-- TOUTES LES MÉTHODES EN MÊME TEMPS -->
+        
+        <!-- Méthode 1: Fixed classique -->
+        <div class="toolbar-fixed">
+            <div class="toolbar-buttons">
+                <span class="method-label">FIXED</span>
+                <button onclick="testMethod('fixed')">Test Fixed</button>
+                <button onclick="insertText('Fixed! ')">Insérer</button>
+            </div>
+        </div>
+        
+        <!-- Méthode 2: Sticky -->
+        <div class="toolbar-sticky">
+            <div class="toolbar-buttons">
+                <span class="method-label">STICKY</span>
+                <button onclick="testMethod('sticky')">Test Sticky</button>
+                <button onclick="insertText('Sticky! ')">Insérer</button>
+            </div>
+        </div>
+        
+        <!-- Méthode 3: Flex -->
+        <div class="toolbar-flex">
+            <div class="toolbar-buttons">
+                <span class="method-label">FLEX</span>
+                <button onclick="testMethod('flex')">Test Flex</button>
+                <button onclick="insertText('Flex! ')">Insérer</button>
+            </div>
+        </div>
+        
+        <!-- Méthode 4: Env keyboard -->
+        <div class="toolbar-env">
+            <div class="toolbar-buttons">
+                <span class="method-label">ENV</span>
+                <button onclick="testMethod('env')">Test Env</button>
+                <button onclick="insertText('Env! ')">Insérer</button>
+            </div>
+        </div>
+        
+        <!-- Méthode 5: DVH -->
+        <div class="toolbar-dvh">
+            <div class="toolbar-buttons">
+                <span class="method-label">DVH</span>
+                <button onclick="testMethod('dvh')">Test DVH</button>
+                <button onclick="insertText('DVH! ')">Insérer</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const editor = document.getElementById('editor');
+        const status = document.getElementById('status');
+        
+        function updateStatus(msg) {
+            status.textContent = new Date().toLocaleTimeString() + ': ' + msg;
+            console.log(msg);
+        }
+        
+        function testMethod(method) {
+            updateStatus(`Test de la méthode: ${method.toUpperCase()}`);
+            editor.focus();
+        }
+        
+        function insertText(text) {
+            const cursorPos = editor.selectionStart;
+            const textBefore = editor.value.substring(0, cursorPos);
+            const textAfter = editor.value.substring(editor.selectionEnd);
+            editor.value = textBefore + text + textAfter;
+            editor.selectionStart = editor.selectionEnd = cursorPos + text.length;
+            editor.focus();
+            updateStatus(`Inséré: "${text}"`);
+        }
+        
+        // Détecter les changements de viewport (clavier)
+        let initialHeight = window.innerHeight;
+        
+        window.addEventListener('resize', () => {
+            const currentHeight = window.innerHeight;
+            const heightDiff = initialHeight - currentHeight;
+            
+            if (heightDiff > 150) {
+                updateStatus(`Clavier détecté - Hauteur réduite de ${heightDiff}px`);
+                document.body.classList.add('keyboard-open');
+            } else {
+                updateStatus(`Clavier fermé - Hauteur: ${currentHeight}px`);
+                document.body.classList.remove('keyboard-open');
+            }
+        });
+        
+        // Détecter focus/blur
+        editor.addEventListener('focus', () => {
+            updateStatus('Éditeur focusé - clavier devrait s\'ouvrir');
+        });
+        
+        editor.addEventListener('blur', () => {
+            updateStatus('Éditeur pas focusé - clavier devrait se fermer');
+            document.body.classList.remove('keyboard-open');
+        });
+        
+        // Test au chargement
+        window.addEventListener('load', () => {
+            updateStatus(`Page chargée - Hauteur initiale: ${initialHeight}px`);
+        });
+        
+        // Détecter les changements de visual viewport (iOS 13+)
+        if (window.visualViewport) {
+            window.visualViewport.addEventListener('resize', () => {
+                const keyboardHeight = window.innerHeight - window.visualViewport.height;
+                updateStatus(`Visual Viewport - Hauteur clavier: ${keyboardHeight}px`);
+            });
+        }
+    </script>
+</body>
+</html>

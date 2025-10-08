@@ -1021,14 +1021,32 @@ function displayNotesList() {
     sortedNotes.forEach(note => {
         const noteItem = document.createElement('div');
         noteItem.className = 'note-item';
-        noteItem.innerHTML = `
-            <div class="note-preview" onclick="loadNote('${note.id}')">
-                <div class="note-title">${note.title}</div>
-                <div class="note-content">${note.content.replace(/<[^>]*>/g, '').substring(0, 100)}...</div>
-                <small>${new Date(note.modified).toLocaleDateString('fr-FR')}</small>
-            </div>
-            <button class="note-delete" onclick="deleteNote('${note.id}')">🗑️</button>
+        
+        // Créer la preview
+        const notePreview = document.createElement('div');
+        notePreview.className = 'note-preview';
+        notePreview.innerHTML = `
+            <div class="note-title">${note.title}</div>
+            <div class="note-content">${note.content.replace(/<[^>]*>/g, '').substring(0, 100)}...</div>
+            <small>${new Date(note.modified).toLocaleDateString('fr-FR')}</small>
         `;
+        notePreview.addEventListener('click', () => {
+            loadNote(note.id);
+            hideNotesList();
+        });
+        
+        // Créer le bouton de suppression
+        const deleteBtn = document.createElement('button');
+        deleteBtn.className = 'note-delete';
+        deleteBtn.textContent = '🗑️';
+        deleteBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            console.log('Suppression de la note:', note.id);
+            deleteNote(note.id);
+        });
+        
+        noteItem.appendChild(notePreview);
+        noteItem.appendChild(deleteBtn);
         notesList.appendChild(noteItem);
     });
 }
