@@ -122,16 +122,18 @@
             flex: 1;
             position: relative;
             background: white;
-            overflow: auto;
+            overflow: hidden; /* Éviter le double scroll */
+            padding-bottom: 120px; /* Espace pour toolbar + marge */
         }
         
         .editor {
             width: 100%;
-            height: calc(100% - 80px); /* Moins la hauteur de la toolbar */
+            height: 100vh;
+            height: 100dvh; /* Pleine hauteur dynamique */
             border: none;
             outline: none;
             padding: 20px;
-            padding-bottom: 20px;
+            padding-bottom: 200px; /* Plus d'espace en bas pour le scroll */
             font-size: 16px;
             line-height: 1.6;
             resize: none;
@@ -140,17 +142,48 @@
             user-select: text;
             -webkit-touch-callout: default;
             touch-action: manipulation;
-            cursor: text;
-            min-height: 200px;
+            box-sizing: border-box;
         }
         
         .editor:focus {
             outline: none;
             background: rgba(0,122,255,0.05);
+            padding-bottom: 300px; /* Encore plus d'espace quand focusé */
         }
         
-        .editor-container {
-            padding-bottom: 80px; /* Espace pour la toolbar toujours visible */
+        .scroll-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            z-index: 10;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            pointer-events: auto;
+        }
+        
+        .scroll-overlay.editing {
+            pointer-events: none;
+            z-index: 0;
+        }
+        
+        .preview-content {
+            padding: 20px;
+            font-size: 16px;
+            line-height: 1.6;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            min-height: 100vh;
+            color: #333;
+        }
+        
+        .preview-content.empty {
+            color: #999;
+        }
+        
+        .editor.editing {
+            z-index: 20;
         }
         
         .toolbar-container {
@@ -215,7 +248,7 @@
             white-space: nowrap;
         }
         
-        .toolbar-btn {
+        .toolbar-btn, .edit-btn {
             background: #007AFF;
             color: white;
             border: none;
@@ -230,6 +263,14 @@
             touch-action: manipulation;
             -webkit-user-select: none;
             user-select: none;
+        }
+        
+        .edit-btn {
+            background: #FF9500;
+        }
+        
+        .edit-btn:active {
+            background: #e6840a;
         }
         
         .toolbar-btn:hover,
@@ -528,6 +569,9 @@
         </div>
         
         <div class="editor-container">
+            <div class="scroll-overlay" id="scroll-overlay">
+                <div class="preview-content" id="preview-content"></div>
+            </div>
             <textarea class="editor" id="editor" placeholder="Commencez à écrire votre note..."></textarea>
         </div>
         
@@ -567,6 +611,7 @@
                 </div>
                 
                 <div class="toolbar-group">
+                    <button class="edit-btn" id="edit-btn">✏️ Éditer</button>
                     <input type="color" class="color-input" id="color-input" value="#000000">
                     <button class="toolbar-btn" id="image-btn" data-action="image">📷</button>
                 </div>

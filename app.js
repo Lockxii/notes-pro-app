@@ -70,10 +70,67 @@ function setupEventListeners() {
     });
     
     editor.addEventListener('click', function(e) {
-        console.log('Editor clicked');
-        this.focus();
-        showToolbarOnFocus();
+        // Marquer que l'utilisateur a interagi
+        userInteracted = true;
     });
+    
+    // Gestion de l'overlay pour éviter l'auto-focus
+    const scrollOverlay = document.getElementById('scroll-overlay');
+    const previewContent = document.getElementById('preview-content');
+    
+    // Mettre à jour l'aperçu
+    function updatePreview() {
+        const content = editor.value;
+        if (content.trim()) {
+            previewContent.textContent = content;
+            previewContent.classList.remove('empty');
+        } else {
+            previewContent.textContent = 'Commencez à écrire votre note...';
+            previewContent.classList.add('empty');
+        }
+    }
+    
+    // Double-tap pour éditer
+    let tapCount = 0;
+    let tapTimer = null;
+    
+    scrollOverlay.addEventListener('touchend', function(e) {
+        tapCount++;
+        
+        if (tapCount === 1) {
+            tapTimer = setTimeout(() => {
+                tapCount = 0;
+                // Simple tap - juste scroller
+            }, 300);
+        } else if (tapCount === 2) {
+            // Double tap - activer l'édition
+            clearTimeout(tapTimer);
+            tapCount = 0;
+            enterEditMode();
+        }
+    });
+    
+    function enterEditMode() {
+        scrollOverlay.classList.add('editing');
+        editor.classList.add('editing');
+        editor.focus();
+        console.log('Mode édition activé');
+    }
+    
+    function exitEditMode() {
+        scrollOverlay.classList.remove('editing');
+        editor.classList.remove('editing');
+        editor.blur();
+        updatePreview();
+        console.log('Mode lecture activé');
+    }
+    
+    // Écouter les changements dans l'éditeur
+    editor.addEventListener('input', updatePreview);
+    editor.addEventListener('blur', exitEditMode);
+    
+    // Initialiser l'aperçu
+    updatePreview();
     
     // Gestion des changements de format
     fontSelect.addEventListener('change', applyFontFamily);
@@ -221,6 +278,21 @@ function setupEventListeners() {
         e.stopPropagation();
         console.log('Notes touchend');
         toggleNotesModal();
+    });
+    
+    // Event listener pour le bouton éditer
+    document.getElementById('edit-btn').addEventListener('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        console.log('Edit button cliqué');
+        enterEditMode();
+    });
+    
+    document.getElementById('edit-btn').addEventListener('touchend', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        console.log('Edit button touchend');
+        enterEditMode();
     });
     
     // Gestion des touches clavier
