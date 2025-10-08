@@ -122,68 +122,65 @@
             flex: 1;
             position: relative;
             background: white;
-            overflow: hidden; /* Éviter le double scroll */
-            padding-bottom: 120px; /* Espace pour toolbar + marge */
+            overflow: hidden;
         }
         
-        .editor {
-            width: 100%;
-            height: 100vh;
-            height: 100dvh; /* Pleine hauteur dynamique */
-            border: none;
-            outline: none;
-            padding: 20px;
-            padding-bottom: 200px; /* Plus d'espace en bas pour le scroll */
-            font-size: 16px;
-            line-height: 1.6;
-            resize: none;
-            background: transparent;
-            -webkit-user-select: text;
-            user-select: text;
-            -webkit-touch-callout: default;
-            touch-action: manipulation;
-            box-sizing: border-box;
-        }
-        
-        .editor:focus {
-            outline: none;
-            background: rgba(0,122,255,0.05);
-            padding-bottom: 300px; /* Encore plus d'espace quand focusé */
-        }
-        
-        .scroll-overlay {
+        /* Zone de lecture - scrollable sans déclencher le clavier */
+        .reading-view {
             position: absolute;
             top: 0;
             left: 0;
             right: 0;
             bottom: 0;
-            z-index: 10;
             overflow-y: auto;
             -webkit-overflow-scrolling: touch;
-            pointer-events: auto;
+            padding-bottom: 100px; /* Espace pour toolbar */
         }
         
-        .scroll-overlay.editing {
-            pointer-events: none;
-            z-index: 0;
-        }
-        
-        .preview-content {
+        .note-content {
             padding: 20px;
             font-size: 16px;
             line-height: 1.6;
             white-space: pre-wrap;
             word-wrap: break-word;
-            min-height: 100vh;
+            min-height: calc(100vh - 180px);
             color: #333;
+            -webkit-user-select: text;
+            user-select: text;
         }
         
-        .preview-content.empty {
+        .note-content.empty {
             color: #999;
+            font-style: italic;
         }
         
-        .editor.editing {
-            z-index: 20;
+        /* Zone d'édition - cachée par défaut */
+        .editor {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            width: 100%;
+            height: 100%;
+            border: none;
+            outline: none;
+            padding: 20px;
+            padding-bottom: 120px;
+            font-size: 16px;
+            line-height: 1.6;
+            resize: none;
+            background: white;
+            box-sizing: border-box;
+            z-index: 100;
+        }
+        
+        .editor.hidden {
+            display: none;
+        }
+        
+        .editor:focus {
+            outline: none;
         }
         
         .toolbar-container {
@@ -196,24 +193,21 @@
             z-index: 1000;
             padding: 15px;
             padding-bottom: max(env(safe-area-inset-bottom), 15px);
+            /* Force toujours visible */
+            transform: translateZ(0);
+            -webkit-transform: translateZ(0);
         }
         
-        /* Adaptation iOS pour clavier */
-        @media screen and (max-height: 500px) {
-            .toolbar-container {
-                position: absolute;
-                bottom: auto;
-                top: calc(100vh - 80px);
-            }
+        /* Alternative: position relative dans le container */
+        body.editing .toolbar-container {
+            position: absolute;
+            bottom: 0;
         }
         
-        /* Support spécifique iOS */
-        @supports (-webkit-touch-callout: none) {
-            .toolbar-container {
-                position: -webkit-sticky;
-                position: sticky;
-                bottom: 0;
-            }
+        body.editing .app-container {
+            position: relative;
+            height: 100vh;
+            height: 100dvh;
         }
         
         .toolbar-handle {
@@ -569,10 +563,13 @@
         </div>
         
         <div class="editor-container">
-            <div class="scroll-overlay" id="scroll-overlay">
-                <div class="preview-content" id="preview-content"></div>
+            <!-- Zone de lecture (par défaut) -->
+            <div class="reading-view" id="reading-view">
+                <div class="note-content" id="note-content">Tapez sur "✏️ Éditer" pour commencer à écrire...</div>
             </div>
-            <textarea class="editor" id="editor" placeholder="Commencez à écrire votre note..."></textarea>
+            
+            <!-- Zone d'édition (cachée par défaut) -->
+            <textarea class="editor hidden" id="editor" placeholder="Commencez à écrire votre note..."></textarea>
         </div>
         
         <div class="toolbar-container" id="toolbar-container">

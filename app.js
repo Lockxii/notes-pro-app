@@ -74,63 +74,97 @@ function setupEventListeners() {
         userInteracted = true;
     });
     
-    // Gestion de l'overlay pour éviter l'auto-focus
-    const scrollOverlay = document.getElementById('scroll-overlay');
-    const previewContent = document.getElementById('preview-content');
+    // Nouvelle approche : lecture vs édition
+    const readingView = document.getElementById('reading-view');
+    const noteContent = document.getElementById('note-content');
+    let isEditing = false;
     
-    // Mettre à jour l'aperçu
-    function updatePreview() {
+    // Mettre à jour l'affichage de lecture
+    function updateReadingView() {
         const content = editor.value;
         if (content.trim()) {
-            previewContent.textContent = content;
-            previewContent.classList.remove('empty');
+            noteContent.textContent = content;
+            noteContent.classList.remove('empty');
         } else {
-            previewContent.textContent = 'Commencez à écrire votre note...';
-            previewContent.classList.add('empty');
+            noteContent.textContent = 'Tapez sur "✏️ Éditer" pour commencer à écrire...';
+            noteContent.classList.add('empty');
         }
     }
     
-    // Double-tap pour éditer
-    let tapCount = 0;
-    let tapTimer = null;
-    
-    scrollOverlay.addEventListener('touchend', function(e) {
-        tapCount++;
+    // Passer en mode édition
+    window.enterEditMode = function() {
+        console.log('Entrée en mode édition');
+        isEditing = true;
         
-        if (tapCount === 1) {
-            tapTimer = setTimeout(() => {
-                tapCount = 0;
-                // Simple tap - juste scroller
-            }, 300);
-        } else if (tapCount === 2) {
-            // Double tap - activer l'édition
-            clearTimeout(tapTimer);
-            tapCount = 0;
-            enterEditMode();
-        }
-    });
-    
-    function enterEditMode() {
-        scrollOverlay.classList.add('editing');
-        editor.classList.add('editing');
-        editor.focus();
-        console.log('Mode édition activé');
+        // Masquer la vue de lecture
+        readingView.style.display = 'none';
+        
+        // Afficher l'éditeur
+        editor.classList.remove('hidden');
+        
+        // Changer le style du body pour la toolbar
+        document.body.classList.add('editing');
+        
+        // Changer le bouton
+        const editBtn = document.getElementById('edit-btn');
+        editBtn.textContent = '✅ Fini';
+        editBtn.style.background = '#34C759';
+        
+        // Focus avec un délai pour iOS
+        setTimeout(() => {
+            editor.focus();
+        }, 100);
     }
     
-    function exitEditMode() {
-        scrollOverlay.classList.remove('editing');
-        editor.classList.remove('editing');
+    // Sortir du mode édition
+    window.exitEditMode = function() {
+        console.log('Sortie du mode édition');
+        isEditing = false;
+        
+        // Blur l'éditeur
         editor.blur();
-        updatePreview();
-        console.log('Mode lecture activé');
+        
+        // Masquer l'éditeur
+        editor.classList.add('hidden');
+        
+        // Afficher la vue de lecture
+        readingView.style.display = 'block';
+        
+        // Enlever le style du body
+        document.body.classList.remove('editing');
+        
+        // Remettre le bouton normal
+        const editBtn = document.getElementById('edit-btn');
+        editBtn.textContent = '✏️ Éditer';
+        editBtn.style.background = '#FF9500';
+        
+        // Mettre à jour l'affichage
+        updateReadingView();
+        
+        // Sauvegarder
+        saveCurrentNote();
     }
     
     // Écouter les changements dans l'éditeur
-    editor.addEventListener('input', updatePreview);
-    editor.addEventListener('blur', exitEditMode);
+    editor.addEventListener('input', function() {
+        // Auto-save pendant l'édition
+        clearTimeout(window.autoSaveTimeout);
+        window.autoSaveTimeout = setTimeout(() => {
+            saveCurrentNote();
+        }, 2000);
+    });
     
-    // Initialiser l'aperçu
-    updatePreview();
+    // Sortir du mode édition si on perd le focus
+    editor.addEventListener('blur', function() {
+        setTimeout(() => {
+            if (isEditing && document.activeElement !== editor) {
+                exitEditMode();
+            }
+        }, 100);
+    });
+    
+    // Initialiser l'affichage
+    updateReadingView();
     
     // Gestion des changements de format
     fontSelect.addEventListener('change', applyFontFamily);
@@ -285,14 +319,22 @@ function setupEventListeners() {
         e.preventDefault();
         e.stopPropagation();
         console.log('Edit button cliqué');
-        enterEditMode();
+        if (isEditing) {
+            exitEditMode();
+        } else {
+            enterEditMode();
+        }
     });
     
     document.getElementById('edit-btn').addEventListener('touchend', function(e) {
         e.preventDefault();
         e.stopPropagation();
         console.log('Edit button touchend');
-        enterEditMode();
+        if (isEditing) {
+            exitEditMode();
+        } else {
+            enterEditMode();
+        }
     });
     
     // Gestion des touches clavier
@@ -883,6 +925,9 @@ function loadNote(noteId) {
     editor.value = note.content; // Utiliser .value pour textarea
     
     console.log('Note chargée:', note.title, note.content.length + ' caractères');
+    
+    // Mettre à jour l'affichage de lecture
+    updateReadingView();
     
     // Réinitialiser l'historique pour la nouvelle note
     undoHistory = [];
