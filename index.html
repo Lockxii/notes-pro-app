@@ -185,28 +185,29 @@
         
         .toolbar-container {
             position: fixed;
-            bottom: 0;
             left: 0;
             right: 0;
             background: #f8f8f8;
             border-top: 1px solid #e0e0e0;
-            z-index: 1000;
+            z-index: 9999;
             padding: 15px;
             padding-bottom: max(env(safe-area-inset-bottom), 15px);
-            /* Visual Viewport API pour iOS */
+            /* EXACTEMENT comme la barre bleue qui fonctionnait */
             transition: bottom 0.3s ease;
+            /* Par défaut en bas */
+            bottom: 0;
             transform: translateZ(0);
             -webkit-transform: translateZ(0);
         }
         
-        /* Quand le clavier est ouvert */
-        body.keyboard-open .toolbar-container {
-            animation: slideUp 0.3s ease;
+        /* Animation pour la toolbar */
+        @keyframes slideUp {
+            from { transform: translateY(100%); }
+            to { transform: translateY(0); }
         }
         
-        @keyframes slideUp {
-            from { transform: translateY(50px); }
-            to { transform: translateY(0); }
+        .toolbar-container.animated {
+            animation: slideUp 0.3s ease;
         }
         
         .toolbar-handle {

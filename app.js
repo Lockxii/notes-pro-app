@@ -1129,6 +1129,7 @@ function applyTheme() {
 document.addEventListener('selectionchange', updateToolbarState);
 
 // ============== SYSTÈME VISUAL VIEWPORT API POUR iOS ==============
+// COPIE EXACTE de la solution qui fonctionnait sur la page de test
 let keyboardHeight = 0;
 let initialViewportHeight = window.innerHeight;
 
@@ -1137,7 +1138,7 @@ function adjustToolbarForKeyboard() {
     if (!toolbarContainer) return;
     
     if (!window.visualViewport) {
-        console.log('Visual Viewport API non supporté');
+        console.log('Visual Viewport API non supporté - utilisation fallback');
         return;
     }
     
@@ -1147,11 +1148,13 @@ function adjustToolbarForKeyboard() {
     if (keyboardHeight > 100) {
         // Clavier ouvert - positionner la toolbar au-dessus
         toolbarContainer.style.bottom = `${keyboardHeight}px`;
+        toolbarContainer.classList.add('animated');
         document.body.classList.add('keyboard-open');
         console.log(`Clavier détecté: ${keyboardHeight}px - Toolbar ajustée`);
     } else {
         // Clavier fermé
         toolbarContainer.style.bottom = '0px';
+        toolbarContainer.classList.remove('animated');
         document.body.classList.remove('keyboard-open');
         console.log('Clavier fermé - Toolbar en bas');
     }
@@ -1169,10 +1172,12 @@ function handleResizeForKeyboard() {
         if (heightDiff > 150) {
             // Probablement le clavier
             toolbarContainer.style.bottom = `${heightDiff - 50}px`;
+            toolbarContainer.classList.add('animated');
             document.body.classList.add('keyboard-open');
             console.log(`Resize détecté: ${heightDiff}px - Toolbar ajustée`);
         } else {
             toolbarContainer.style.bottom = '0px';
+            toolbarContainer.classList.remove('animated');
             document.body.classList.remove('keyboard-open');
             console.log(`Resize normal: ${currentHeight}px`);
         }
@@ -1191,7 +1196,7 @@ function initKeyboardDetection() {
         window.addEventListener('resize', handleResizeForKeyboard);
     }
     
-    // Focus/Blur sur l'éditeur
+    // Focus/Blur sur l'éditeur - EXACTEMENT comme la page de test
     const editor = document.getElementById('editor');
     if (editor) {
         editor.addEventListener('focus', () => {
@@ -1206,6 +1211,7 @@ function initKeyboardDetection() {
                 const toolbarContainer = document.getElementById('toolbar-container');
                 if (toolbarContainer) {
                     toolbarContainer.style.bottom = '0px';
+                    toolbarContainer.classList.remove('animated');
                     document.body.classList.remove('keyboard-open');
                 }
             }, 100);
