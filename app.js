@@ -448,22 +448,26 @@ function toggleFormat(command) {
         const selectedText = editor.value.substring(selectionStart, selectionEnd);
         
         if (selectedText.length > 0) {
-            let tag = '';
+            // Pour un textarea simple, on peut juste entourer le texte avec des symboles
+            let prefix = '', suffix = '';
             switch(command) {
-                case 'bold': tag = 'b'; break;
-                case 'italic': tag = 'i'; break;
-                case 'underline': tag = 'u'; break;
+                case 'bold': 
+                    prefix = '**'; suffix = '**'; break;
+                case 'italic': 
+                    prefix = '*'; suffix = '*'; break;
+                case 'underline': 
+                    prefix = '_'; suffix = '_'; break;
             }
             
-            if (tag) {
+            if (prefix && suffix) {
                 const beforeText = editor.value.substring(0, selectionStart);
                 const afterText = editor.value.substring(selectionEnd);
-                const styledText = `<${tag}>${selectedText}</${tag}>`;
+                const styledText = `${prefix}${selectedText}${suffix}`;
                 
                 editor.value = beforeText + styledText + afterText;
                 
-                // Restaurer la sélection étendue
-                editor.setSelectionRange(selectionStart, selectionStart + styledText.length);
+                // Restaurer la sélection sur le texte formaté
+                editor.setSelectionRange(selectionStart + prefix.length, selectionStart + prefix.length + selectedText.length);
             }
         }
         
@@ -488,21 +492,13 @@ function applyFontFamily() {
         // Sauvegarder la sélection du textarea
         const selectionStart = editor.selectionStart;
         const selectionEnd = editor.selectionEnd;
-        const selectedText = editor.value.substring(selectionStart, selectionEnd);
         
-        if (selectedText.length > 0) {
-            // Appliquer la police au texte sélectionné
-            const beforeText = editor.value.substring(0, selectionStart);
-            const afterText = editor.value.substring(selectionEnd);
-            const styledText = `<span style="font-family: ${fontFamily};">${selectedText}</span>`;
-            
-            editor.value = beforeText + styledText + afterText;
-            
-            // Restaurer la sélection
-            editor.setSelectionRange(selectionStart, selectionStart + styledText.length);
-        } else {
-            // Appliquer la police globale
-            editor.style.fontFamily = fontFamily;
+        // Appliquer la police globale à tout l'éditeur
+        editor.style.fontFamily = fontFamily;
+        
+        // Restaurer la sélection si elle existait
+        if (selectionStart !== selectionEnd) {
+            editor.setSelectionRange(selectionStart, selectionEnd);
         }
         
         // Maintenir le focus
@@ -525,20 +521,16 @@ function applyFontSize() {
         // Sauvegarder la sélection du textarea
         const selectionStart = editor.selectionStart;
         const selectionEnd = editor.selectionEnd;
-        const selectedText = editor.value.substring(selectionStart, selectionEnd);
         
-        if (selectedText.length > 0) {
-            // Appliquer la taille au texte sélectionné
-            const beforeText = editor.value.substring(0, selectionStart);
-            const afterText = editor.value.substring(selectionEnd);
-            const styledText = `<span style="font-size: ${fontSize}px;">${selectedText}</span>`;
-            
-            editor.value = beforeText + styledText + afterText;
+        if (selectionStart !== selectionEnd) {
+            // Il y a une sélection - juste appliquer le style global pour cette sélection
+            // On ne peut pas formater individuellement dans un textarea
+            editor.style.fontSize = fontSize + 'px';
             
             // Restaurer la sélection
-            editor.setSelectionRange(selectionStart, selectionStart + styledText.length);
+            editor.setSelectionRange(selectionStart, selectionEnd);
         } else {
-            // Appliquer la taille globale
+            // Pas de sélection - appliquer la taille globale
             editor.style.fontSize = fontSize + 'px';
         }
         
@@ -583,33 +575,31 @@ function restoreSelection(savedSelection) {
 }
 
 function applyTextColor() {
-    const color = document.getElementById('color-input').value;
-    const selection = window.getSelection();
-    const savedSelection = saveSelection();
-    
-    if (selection.rangeCount > 0 && !selection.isCollapsed) {
-        const range = selection.getRangeAt(0);
-        const span = document.createElement('span');
-        span.style.color = color;
+    try {
+        const colorInput = document.getElementById('color-input');
+        const editor = document.getElementById('editor');
+        if (!colorInput || !editor) return;
         
-        try {
-            range.surroundContents(span);
-        } catch (e) {
-            const contents = range.extractContents();
-            span.appendChild(contents);
-            range.insertNode(span);
+        const color = colorInput.value;
+        
+        // Sauvegarder la sélection
+        const selectionStart = editor.selectionStart;
+        const selectionEnd = editor.selectionEnd;
+        
+        // Appliquer la couleur globale à tout l'éditeur
+        editor.style.color = color;
+        
+        // Restaurer la sélection si elle existait
+        if (selectionStart !== selectionEnd) {
+            editor.setSelectionRange(selectionStart, selectionEnd);
         }
         
-        // Restaurer la sélection
-        restoreSelection(savedSelection);
-    } else {
-        // Pour le prochain texte
-        document.execCommand('foreColor', false, color);
+        // Maintenir le focus
+        editor.focus();
+        autoSave();
+    } catch (error) {
+        console.log('Text color error:', error);
     }
-    
-    setTimeout(() => {
-        document.getElementById('editor').focus();
-    }, 10);
 }
 
 function updateToolbarState() {
