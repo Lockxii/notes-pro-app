@@ -74,10 +74,12 @@ function setupEventListeners() {
         userInteracted = true;
     });
     
-    // Nouvelle approche : lecture vs édition
+    // Approche simple : double-clic pour éditer
     const readingView = document.getElementById('reading-view');
     const noteContent = document.getElementById('note-content');
     let isEditing = false;
+    let clickCount = 0;
+    let clickTimer = null;
     
     // Mettre à jour l'affichage de lecture
     function updateReadingView() {
@@ -86,14 +88,43 @@ function setupEventListeners() {
             noteContent.textContent = content;
             noteContent.classList.remove('empty');
         } else {
-            noteContent.textContent = 'Tapez sur "✏️ Éditer" pour commencer à écrire...';
+            noteContent.textContent = 'Double-cliquez pour commencer à écrire...';
             noteContent.classList.add('empty');
         }
     }
     
+    // Gestion du double-clic/tap sur la zone de lecture
+    noteContent.addEventListener('click', function(e) {
+        handleTapClick();
+    });
+    
+    // Support tactile pour mobile
+    noteContent.addEventListener('touchend', function(e) {
+        e.preventDefault();
+        handleTapClick();
+    });
+    
+    function handleTapClick() {
+        clickCount++;
+        
+        if (clickCount === 1) {
+            // Premier clic/tap - attendre pour voir s'il y a un deuxième
+            clickTimer = setTimeout(() => {
+                clickCount = 0;
+                // Simple clic/tap - ne rien faire, juste permettre le scroll
+                console.log('Simple tap - mode lecture');
+            }, 400); // Plus de temps sur mobile
+        } else if (clickCount === 2) {
+            // Double clic/tap - passer en mode édition
+            clearTimeout(clickTimer);
+            clickCount = 0;
+            enterEditMode();
+        }
+    }
+    
     // Passer en mode édition
-    window.enterEditMode = function() {
-        console.log('Entrée en mode édition');
+    function enterEditMode() {
+        console.log('Double-clic détecté - mode édition');
         isEditing = true;
         
         // Masquer la vue de lecture
@@ -102,14 +133,6 @@ function setupEventListeners() {
         // Afficher l'éditeur
         editor.classList.remove('hidden');
         
-        // Changer le style du body pour la toolbar
-        document.body.classList.add('editing');
-        
-        // Changer le bouton
-        const editBtn = document.getElementById('edit-btn');
-        editBtn.textContent = '✅ Fini';
-        editBtn.style.background = '#34C759';
-        
         // Focus avec un délai pour iOS
         setTimeout(() => {
             editor.focus();
@@ -117,7 +140,7 @@ function setupEventListeners() {
     }
     
     // Sortir du mode édition
-    window.exitEditMode = function() {
+    function exitEditMode() {
         console.log('Sortie du mode édition');
         isEditing = false;
         
@@ -129,14 +152,6 @@ function setupEventListeners() {
         
         // Afficher la vue de lecture
         readingView.style.display = 'block';
-        
-        // Enlever le style du body
-        document.body.classList.remove('editing');
-        
-        // Remettre le bouton normal
-        const editBtn = document.getElementById('edit-btn');
-        editBtn.textContent = '✏️ Éditer';
-        editBtn.style.background = '#FF9500';
         
         // Mettre à jour l'affichage
         updateReadingView();
@@ -154,13 +169,20 @@ function setupEventListeners() {
         }, 2000);
     });
     
-    // Sortir du mode édition si on perd le focus
+    // Sortir du mode édition automatiquement
     editor.addEventListener('blur', function() {
         setTimeout(() => {
-            if (isEditing && document.activeElement !== editor) {
+            if (isEditing) {
                 exitEditMode();
             }
-        }, 100);
+        }, 200);
+    });
+    
+    // Sortir aussi si on clique ailleurs
+    document.addEventListener('click', function(e) {
+        if (isEditing && !editor.contains(e.target) && e.target !== editor) {
+            exitEditMode();
+        }
     });
     
     // Initialiser l'affichage
@@ -314,28 +336,7 @@ function setupEventListeners() {
         toggleNotesModal();
     });
     
-    // Event listener pour le bouton éditer
-    document.getElementById('edit-btn').addEventListener('click', function(e) {
-        e.preventDefault();
-        e.stopPropagation();
-        console.log('Edit button cliqué');
-        if (isEditing) {
-            exitEditMode();
-        } else {
-            enterEditMode();
-        }
-    });
-    
-    document.getElementById('edit-btn').addEventListener('touchend', function(e) {
-        e.preventDefault();
-        e.stopPropagation();
-        console.log('Edit button touchend');
-        if (isEditing) {
-            exitEditMode();
-        } else {
-            enterEditMode();
-        }
-    });
+    // Plus besoin de bouton éditer - utilisation du double-clic
     
     // Gestion des touches clavier
     document.addEventListener('keydown', handleKeyboard);
