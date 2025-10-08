@@ -169,10 +169,17 @@
             padding-bottom: 120px;
             font-size: 16px;
             line-height: 1.6;
-            resize: none;
             background: white;
             box-sizing: border-box;
             z-index: 100;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+        
+        .editor[data-placeholder]:empty::before {
+            content: attr(data-placeholder);
+            color: #999;
+            font-style: italic;
         }
         
         .editor.hidden {
@@ -573,7 +580,7 @@
             </div>
             
             <!-- Zone d'édition (cachée par défaut) -->
-            <textarea class="editor hidden" id="editor" placeholder="Commencez à écrire votre note..."></textarea>
+            <div class="editor hidden" id="editor" contenteditable="true" data-placeholder="Commencez à écrire votre note..."></div>
         </div>
         
         <div class="toolbar-container" id="toolbar-container">
