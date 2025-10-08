@@ -193,21 +193,20 @@
             z-index: 1000;
             padding: 15px;
             padding-bottom: max(env(safe-area-inset-bottom), 15px);
-            /* Force toujours visible */
+            /* Visual Viewport API pour iOS */
+            transition: bottom 0.3s ease;
             transform: translateZ(0);
             -webkit-transform: translateZ(0);
         }
         
-        /* Alternative: position relative dans le container */
-        body.editing .toolbar-container {
-            position: absolute;
-            bottom: 0;
+        /* Quand le clavier est ouvert */
+        body.keyboard-open .toolbar-container {
+            animation: slideUp 0.3s ease;
         }
         
-        body.editing .app-container {
-            position: relative;
-            height: 100vh;
-            height: 100dvh;
+        @keyframes slideUp {
+            from { transform: translateY(50px); }
+            to { transform: translateY(0); }
         }
         
         .toolbar-handle {
