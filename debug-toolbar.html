@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>Debug Toolbar - App Simplifiée</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        html, body {
+            height: 100vh;
+            overflow: hidden;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, Arial, sans-serif;
+            background: #f5f5f5;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .header {
+            background: #007AFF;
+            color: white;
+            padding: 15px;
+            text-align: center;
+            font-weight: bold;
+            flex-shrink: 0;
+        }
+        
+        .editor-container {
+            flex: 1;
+            position: relative;
+            background: white;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        /* Mode lecture */
+        .reading-view {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+        
+        .note-content {
+            font-size: 16px;
+            line-height: 1.6;
+            color: #333;
+            min-height: 200px;
+            white-space: pre-wrap;
+        }
+        
+        .note-content.empty {
+            color: #999;
+            font-style: italic;
+        }
+        
+        /* Mode édition */
+        .editor {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            width: 100%;
+            height: 100%;
+            border: none;
+            outline: none;
+            padding: 20px;
+            font-size: 16px;
+            line-height: 1.6;
+            resize: none;
+            background: white;
+            display: none;
+        }
+        
+        .editor.editing {
+            display: block;
+        }
+        
+        /* TOOLBAR - COPIE EXACTE DE CELLE QUI MARCHAIT */
+        .toolbar-container {
+            position: fixed;
+            left: 0;
+            right: 0;
+            background: #007AFF;
+            color: white;
+            padding: 12px 15px;
+            z-index: 9999;
+            transition: bottom 0.3s ease;
+            /* Par défaut en bas */
+            bottom: 0;
+        }
+        
+        .toolbar-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .toolbar button {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            min-height: 36px;
+        }
+        
+        .toolbar button:active {
+            background: rgba(255,255,255,0.4);
+            transform: scale(0.95);
+        }
+        
+        .edit-btn {
+            background: #FF9500;
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+        
+        .info {
+            background: #333;
+            color: white;
+            padding: 8px 15px;
+            font-family: monospace;
+            font-size: 11px;
+            position: fixed;
+            top: 60px;
+            left: 0;
+            right: 0;
+            z-index: 10000;
+        }
+        
+        /* Animation */
+        @keyframes slideUp {
+            from { transform: translateY(100%); }
+            to { transform: translateY(0); }
+        }
+        
+        .toolbar-container.animated {
+            animation: slideUp 0.3s ease;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        Debug Toolbar - Version Simplifiée
+    </div>
+    
+    <div class="info" id="info">Chargement...</div>
+    
+    <div class="editor-container">
+        <!-- Mode lecture par défaut -->
+        <div class="reading-view" id="reading-view">
+            <div class="note-content empty" id="note-content">Double-tapez pour commencer à écrire...</div>
+        </div>
+        
+        <!-- Mode édition caché -->
+        <textarea class="editor" id="editor" placeholder="Tapez votre texte ici..."></textarea>
+    </div>
+    
+    <!-- TOOLBAR EXACTE DE LA PAGE QUI MARCHAIT -->
+    <div class="toolbar-container" id="toolbar-container">
+        <div class="toolbar-buttons">
+            <button class="edit-btn" id="edit-btn" onclick="toggleEditMode()">✏️ Éditer</button>
+            <button onclick="insertText('Test ')">Insérer Test</button>
+            <button onclick="saveNote()">💾 Sauver</button>
+            <button onclick="clearNote()">🗑️ Vider</button>
+        </div>
+    </div>
+
+    <script>
+        const editor = document.getElementById('editor');
+        const readingView = document.getElementById('reading-view');
+        const noteContent = document.getElementById('note-content');
+        const info = document.getElementById('info');
+        const toolbarContainer = document.getElementById('toolbar-container');
+        const editBtn = document.getElementById('edit-btn');
+        
+        let isEditing = false;
+        let keyboardHeight = 0;
+        let initialViewportHeight = window.innerHeight;
+        
+        function updateInfo(msg) {
+            const timestamp = new Date().toLocaleTimeString();
+            info.textContent = `${timestamp}: ${msg}`;
+            console.log(msg);
+        }
+        
+        function toggleEditMode() {
+            isEditing = !isEditing;
+            
+            if (isEditing) {
+                // Passer en mode édition
+                editor.value = noteContent.textContent.replace('Double-tapez pour commencer à écrire...', '');
+                editor.classList.add('editing');
+                readingView.style.display = 'none';
+                editBtn.textContent = '✅ Terminer';
+                editBtn.style.background = '#34C759';
+                
+                // Focus avec délai
+                setTimeout(() => {
+                    editor.focus();
+                    updateInfo('Mode édition activé');
+                }, 100);
+            } else {
+                // Retour en mode lecture
+                const content = editor.value.trim();
+                noteContent.textContent = content || 'Double-tapez pour commencer à écrire...';
+                noteContent.classList.toggle('empty', !content);
+                
+                editor.classList.remove('editing');
+                readingView.style.display = 'block';
+                editBtn.textContent = '✏️ Éditer';
+                editBtn.style.background = '#FF9500';
+                
+                editor.blur();
+                updateInfo('Mode lecture activé');
+            }
+        }
+        
+        function insertText(text) {
+            if (!isEditing) {
+                toggleEditMode();
+                setTimeout(() => insertText(text), 200);
+                return;
+            }
+            
+            const cursorPos = editor.selectionStart;
+            const textBefore = editor.value.substring(0, cursorPos);
+            const textAfter = editor.value.substring(editor.selectionEnd);
+            editor.value = textBefore + text + textAfter;
+            editor.selectionStart = editor.selectionEnd = cursorPos + text.length;
+            editor.focus();
+            updateInfo(`Inséré: "${text}"`);
+        }
+        
+        function saveNote() {
+            updateInfo('Note sauvée !');
+        }
+        
+        function clearNote() {
+            if (isEditing) {
+                editor.value = '';
+                editor.focus();
+            } else {
+                noteContent.textContent = 'Double-tapez pour commencer à écrire...';
+                noteContent.classList.add('empty');
+            }
+            updateInfo('Note vidée');
+        }
+        
+        // SYSTÈME VISUAL VIEWPORT - COPIE EXACTE
+        function adjustForKeyboard() {
+            if (!window.visualViewport) {
+                updateInfo('Visual Viewport API non supporté');
+                return;
+            }
+            
+            const viewport = window.visualViewport;
+            keyboardHeight = window.innerHeight - viewport.height;
+            
+            if (keyboardHeight > 100) {
+                // Clavier ouvert
+                toolbarContainer.style.bottom = `${keyboardHeight}px`;
+                toolbarContainer.classList.add('animated');
+                updateInfo(`Clavier: ${keyboardHeight}px - Toolbar ajustée`);
+            } else {
+                // Clavier fermé
+                toolbarContainer.style.bottom = '0px';
+                toolbarContainer.classList.remove('animated');
+                updateInfo('Clavier fermé - Toolbar en bas');
+            }
+        }
+        
+        // ÉVÉNEMENTS - IDENTIQUES À LA PAGE QUI MARCHAIT
+        if (window.visualViewport) {
+            window.visualViewport.addEventListener('resize', adjustForKeyboard);
+            window.visualViewport.addEventListener('scroll', adjustForKeyboard);
+            updateInfo('Visual Viewport API activé');
+        } else {
+            updateInfo('Visual Viewport API non disponible');
+        }
+        
+        editor.addEventListener('focus', () => {
+            updateInfo('Éditeur focusé');
+            setTimeout(adjustForKeyboard, 300);
+        });
+        
+        editor.addEventListener('blur', () => {
+            updateInfo('Éditeur perdu focus');
+            setTimeout(() => {
+                toolbarContainer.style.bottom = '0px';
+                toolbarContainer.classList.remove('animated');
+            }, 100);
+        });
+        
+        // Double-tap pour éditer
+        let lastTapTime = 0;
+        noteContent.addEventListener('touchstart', (e) => {
+            const now = Date.now();
+            if (now - lastTapTime < 300) {
+                e.preventDefault();
+                if (!isEditing) {
+                    toggleEditMode();
+                    updateInfo('Double-tap détecté - Mode édition');
+                }
+            }
+            lastTapTime = now;
+        });
+        
+        // Initialisation
+        window.addEventListener('load', () => {
+            initialViewportHeight = window.innerHeight;
+            updateInfo(`Chargé - H: ${initialViewportHeight}px, UA: ${navigator.userAgent.includes('iPhone') ? 'iPhone' : 'Autre'}`);
+        });
+        
+        // Debug périodique
+        setInterval(() => {
+            if (document.activeElement === editor) {
+                adjustForKeyboard();
+            }
+        }, 1000);
+    </script>
+</body>
+</html>
