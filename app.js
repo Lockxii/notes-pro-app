@@ -2,6 +2,11 @@
 let currentNoteId = null;
 let notes = JSON.parse(localStorage.getItem('notes')) || {};
 let toolbarVisible = false;
+
+// Debug chargement initial
+console.log('CHARGEMENT INITIAL - localStorage notes:', localStorage.getItem('notes'));
+console.log('CHARGEMENT INITIAL - notes parsées:', notes);
+console.log('CHARGEMENT INITIAL - nombre de notes:', Object.keys(notes).length);
 let selectedImage = null;
 let currentFontSize = 16;
 let isDarkMode = localStorage.getItem('darkMode') === 'true';
@@ -1009,7 +1014,14 @@ function undoLastAction() {
 }
 
 function loadNote(noteId) {
-    if (!notes[noteId]) return;
+    console.log('loadNote appelée avec noteId:', noteId);
+    console.log('loadNote - notes disponibles:', Object.keys(notes));
+    console.log('loadNote - note existe?', !!notes[noteId]);
+    
+    if (!notes[noteId]) {
+        console.error('Note non trouvée:', noteId);
+        return;
+    }
     
     currentNoteId = noteId;
     const note = notes[noteId];
@@ -1085,7 +1097,10 @@ function deleteNote(noteId) {
 }
 
 function saveToStorage() {
+    console.log('saveToStorage - Sauvegarde de', Object.keys(notes).length, 'notes');
+    console.log('saveToStorage - Contenu:', notes);
     localStorage.setItem('notes', JSON.stringify(notes));
+    console.log('saveToStorage - Sauvé dans localStorage');
 }
 
 // Interface des notes
@@ -1102,9 +1117,19 @@ function displayNotesList() {
     const notesList = document.getElementById('notes-list');
     notesList.innerHTML = '';
     
+    console.log('displayNotesList - Nombre de notes:', Object.keys(notes).length);
+    console.log('displayNotesList - Notes:', notes);
+    
     const sortedNotes = Object.values(notes).sort((a, b) => 
         new Date(b.modified) - new Date(a.modified)
     );
+    
+    console.log('displayNotesList - Notes triées:', sortedNotes);
+    
+    if (sortedNotes.length === 0) {
+        notesList.innerHTML = '<div style="padding: 20px; text-align: center; color: #666;">Aucune note trouvée</div>';
+        return;
+    }
     
     sortedNotes.forEach(note => {
         const noteItem = document.createElement('div');
