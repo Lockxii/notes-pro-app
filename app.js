@@ -396,20 +396,7 @@ function setupEventListeners() {
         saveCurrentNote();
     });
 
-    // Bouton basculer affichage
-    document.getElementById('view-btn').addEventListener('click', function(e) {
-        e.preventDefault();
-        e.stopPropagation();
-        console.log('View toggle clicked');
-        toggleReadingMode();
-    });
-
-    document.getElementById('view-btn').addEventListener('touchend', function(e) {
-        e.preventDefault();
-        e.stopPropagation();
-        console.log('View toggle touchend');
-        toggleReadingMode();
-    });
+    // Bouton œil supprimé
 
     document.querySelector('.notes-btn').addEventListener('touchend', function(e) {
         e.preventDefault();
@@ -1158,10 +1145,13 @@ function displayNotesList() {
         openBtn.style.background = '#34C759';
         openBtn.style.color = 'white';
         openBtn.style.border = 'none';
-        openBtn.style.padding = '8px 12px';
+        openBtn.style.padding = '10px 16px';
         openBtn.style.borderRadius = '8px';
         openBtn.style.cursor = 'pointer';
-        openBtn.style.fontSize = '14px';
+        openBtn.style.fontSize = '16px';
+        openBtn.style.fontWeight = '600';
+        openBtn.style.minWidth = '80px';
+        openBtn.style.whiteSpace = 'nowrap';
         openBtn.addEventListener('click', (e) => {
             e.stopPropagation();
             console.log('Ouverture de la note:', note.id);
@@ -1172,7 +1162,17 @@ function displayNotesList() {
         // Créer le bouton de suppression
         const deleteBtn = document.createElement('button');
         deleteBtn.className = 'note-delete';
-        deleteBtn.textContent = '🗑️';
+        deleteBtn.textContent = '🗑️ Sup.';
+        deleteBtn.style.background = '#FF3B30';
+        deleteBtn.style.color = 'white';
+        deleteBtn.style.border = 'none';
+        deleteBtn.style.padding = '10px 16px';
+        deleteBtn.style.borderRadius = '8px';
+        deleteBtn.style.cursor = 'pointer';
+        deleteBtn.style.fontSize = '16px';
+        deleteBtn.style.fontWeight = '600';
+        deleteBtn.style.minWidth = '80px';
+        deleteBtn.style.whiteSpace = 'nowrap';
         deleteBtn.addEventListener('click', (e) => {
             e.stopPropagation();
             console.log('Suppression de la note:', note.id);

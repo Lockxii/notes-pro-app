@@ -67,7 +67,7 @@
             align-items: center;
         }
         
-        .notes-list-btn, .save-btn, .theme-btn, .undo-btn, .view-btn {
+        .notes-list-btn, .save-btn, .theme-btn, .undo-btn {
             background: rgba(255,255,255,0.2);
             border: none;
             color: white;
@@ -90,7 +90,7 @@
             z-index: 100;
         }
         
-        .theme-btn, .undo-btn, .view-btn {
+        .theme-btn, .undo-btn {
             padding: 8px 12px;
             font-size: 16px;
         }
@@ -100,18 +100,18 @@
             font-weight: bold;
         }
         
-        .notes-list-btn:hover, .save-btn:hover, .theme-btn:hover, .undo-btn:hover, .view-btn:hover {
+        .notes-list-btn:hover, .save-btn:hover, .theme-btn:hover, .undo-btn:hover {
             background: rgba(255,255,255,0.3);
         }
         
-        .notes-list-btn:active, .save-btn:active, .theme-btn:active, .undo-btn:active, .view-btn:active {
+        .notes-list-btn:active, .save-btn:active, .theme-btn:active, .undo-btn:active {
             background: rgba(255,255,255,0.5);
             transform: scale(0.95);
         }
         
         /* Styles pour les indicateurs tactiles */
         @media (pointer: coarse) {
-            .notes-list-btn, .save-btn, .theme-btn, .undo-btn, .view-btn {
+            .notes-list-btn, .save-btn, .theme-btn, .undo-btn {
                 min-width: 70px;
                 min-height: 70px;
                 padding: 20px;
@@ -615,7 +615,6 @@
             <div class="header-controls">
                 <button class="undo-btn" id="undo-btn" title="Annuler">↶</button>
                 <button class="theme-btn" id="theme-btn">🌙</button>
-                <button class="view-btn" id="view-btn" title="Basculer affichage">👁️</button>
                 <button class="save-btn" id="save-btn">💾 Sauver</button>
             </div>
         </div>
