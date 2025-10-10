@@ -1165,18 +1165,7 @@ function displayNotesList() {
         actionsContainer.style.display = 'flex';
         actionsContainer.style.alignItems = 'center';
         actionsContainer.style.flexShrink = '0';
-                    
-                    // Sauvegarder comme dernière note ouverte
-                    localStorage.setItem('lastOpenedNote', note.id);
-                    
-                    // Forcer le retour en mode lecture
-                    isEditing = false;
-                    editor.classList.add('hidden');
-                    readingView.style.display = 'block';
-                    
-                    // Mettre à jour l'affichage de lecture
-                    updateReadingView();
-                    
+        
         // Créer le bouton de suppression
         const deleteBtn = document.createElement('button');
         deleteBtn.className = 'note-delete';
