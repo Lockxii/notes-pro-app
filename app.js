@@ -1121,8 +1121,10 @@ function displayNotesList() {
     sortedNotes.forEach(note => {
         const noteItem = document.createElement('div');
         noteItem.className = 'note-item';
+        noteItem.style.cursor = 'pointer';
+        noteItem.style.transition = 'background-color 0.2s';
         
-        // Créer la preview
+        // Créer la preview (cliquable pour ouvrir la note)
         const notePreview = document.createElement('div');
         notePreview.className = 'note-preview';
         notePreview.innerHTML = `
@@ -1130,45 +1132,39 @@ function displayNotesList() {
             <div class="note-content">${note.content.replace(/<[^>]*>/g, '').substring(0, 100)}...</div>
             <small>${new Date(note.modified).toLocaleDateString('fr-FR')}</small>
         `;
-        // Event listener supprimé - utilisation du bouton Ouvrir maintenant
         
-        // Créer les boutons d'action
+        // Tap sur la preview pour ouvrir la note (iPhone friendly)
+        notePreview.addEventListener('touchstart', function(e) {
+            e.stopPropagation();
+            noteItem.style.backgroundColor = '#f0f0f0';
+        });
+        
+        notePreview.addEventListener('touchend', function(e) {
+            e.stopPropagation();
+            noteItem.style.backgroundColor = 'transparent';
+            // Ouvrir la note directement
+            document.getElementById('editor').innerHTML = note.content;
+            currentNoteId = note.id;
+            localStorage.setItem('lastOpenedNote', note.id);
+            showNotesList(false);
+            switchToEditMode();
+        });
+        
+        // Click pour desktop
+        notePreview.addEventListener('click', function(e) {
+            e.stopPropagation();
+            document.getElementById('editor').innerHTML = note.content;
+            currentNoteId = note.id;
+            localStorage.setItem('lastOpenedNote', note.id);
+            showNotesList(false);
+            switchToEditMode();
+        });
+        
+        // Créer le conteneur pour le bouton de suppression uniquement
         const actionsContainer = document.createElement('div');
         actionsContainer.style.display = 'flex';
-        actionsContainer.style.gap = '6px';
         actionsContainer.style.alignItems = 'center';
         actionsContainer.style.flexShrink = '0';
-        
-        // Bouton ouvrir
-        const openBtn = document.createElement('button');
-        openBtn.className = 'note-open';
-        openBtn.textContent = '📂 Ouvrir';
-        openBtn.style.background = '#34C759';
-        openBtn.style.color = 'white';
-        openBtn.style.border = 'none';
-        openBtn.style.padding = '6px 12px';
-        openBtn.style.borderRadius = '6px';
-        openBtn.style.cursor = 'pointer';
-        openBtn.style.fontSize = '14px';
-        openBtn.style.fontWeight = '600';
-        openBtn.style.minWidth = '70px';
-        openBtn.style.whiteSpace = 'nowrap';
-        openBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            console.log('=== CLIC BOUTON OUVRIR ===');
-            console.log('Note ID:', note.id);
-            console.log('Note exists:', !!notes[note.id]);
-            console.log('Note content:', note);
-            
-            try {
-                // Solution directe : forcer le chargement
-                currentNoteId = note.id;
-                const editor = document.getElementById('editor');
-                const readingView = document.getElementById('reading-view');
-                
-                if (editor && readingView) {
-                    // Charger le contenu directement
-                    editor.innerHTML = note.content || '';
                     
                     // Sauvegarder comme dernière note ouverte
                     localStorage.setItem('lastOpenedNote', note.id);
@@ -1181,16 +1177,6 @@ function displayNotesList() {
                     // Mettre à jour l'affichage de lecture
                     updateReadingView();
                     
-                    console.log('Note chargée directement avec succès');
-                    hideNotesList();
-                } else {
-                    console.error('Éléments editor ou readingView non trouvés');
-                }
-            } catch (error) {
-                console.error('Erreur lors du chargement de la note:', error);
-            }
-        });
-        
         // Créer le bouton de suppression
         const deleteBtn = document.createElement('button');
         deleteBtn.className = 'note-delete';
@@ -1211,7 +1197,6 @@ function displayNotesList() {
             deleteNote(note.id);
         });
         
-        actionsContainer.appendChild(openBtn);
         actionsContainer.appendChild(deleteBtn);
         
         noteItem.appendChild(notePreview);
