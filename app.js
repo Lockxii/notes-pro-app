@@ -87,12 +87,35 @@ function setupEventListeners() {
     // Mettre à jour l'affichage de lecture
     function updateReadingView() {
         const content = editor.innerHTML;
-        if (content.trim()) {
+        if (content.trim() && content !== '<br>') {
+            // Afficher le contenu formaté (HTML) en mode lecture
             noteContent.innerHTML = content;
             noteContent.classList.remove('empty');
         } else {
             noteContent.textContent = 'Double-tapez pour commencer à écrire...';
             noteContent.classList.add('empty');
+        }
+    }
+    
+    // Fonction pour basculer entre affichage formaté et texte brut
+    function toggleReadingMode() {
+        const content = editor.innerHTML;
+        if (content.trim() && content !== '<br>') {
+            if (noteContent.innerHTML === content) {
+                // Actuellement en mode formaté, passer en mode texte brut
+                noteContent.textContent = editor.textContent || editor.innerText || '';
+                noteContent.style.fontFamily = 'monospace';
+                noteContent.style.backgroundColor = '#f5f5f5';
+                noteContent.style.padding = '15px';
+                noteContent.style.borderRadius = '5px';
+            } else {
+                // Actuellement en mode texte brut, passer en mode formaté
+                noteContent.innerHTML = content;
+                noteContent.style.fontFamily = '';
+                noteContent.style.backgroundColor = '';
+                noteContent.style.padding = '20px';
+                noteContent.style.borderRadius = '';
+            }
         }
     }
     
@@ -366,6 +389,21 @@ function setupEventListeners() {
         e.stopPropagation();
         console.log('Save touchend');
         saveCurrentNote();
+    });
+
+    // Bouton basculer affichage
+    document.getElementById('view-btn').addEventListener('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        console.log('View toggle clicked');
+        toggleReadingMode();
+    });
+
+    document.getElementById('view-btn').addEventListener('touchend', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        console.log('View toggle touchend');
+        toggleReadingMode();
     });
 
     document.querySelector('.notes-btn').addEventListener('touchend', function(e) {
@@ -851,8 +889,9 @@ function saveCurrentNote() {
         console.log('Création nouvelle note:', currentNoteId);
     }
     
-    // Extraire un titre (premiers mots du contenu)
-    const title = content.substring(0, 50).trim() || 'Note sans titre';
+    // Extraire un titre (premiers mots du contenu, sans HTML)
+    const textContent = editor.textContent || editor.innerText || '';
+    const title = textContent.substring(0, 50).trim() || 'Note sans titre';
     
     notes[currentNoteId] = {
         id: currentNoteId,

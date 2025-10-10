@@ -67,7 +67,7 @@
             align-items: center;
         }
         
-        .notes-list-btn, .save-btn, .theme-btn, .undo-btn {
+        .notes-list-btn, .save-btn, .theme-btn, .undo-btn, .view-btn {
             background: rgba(255,255,255,0.2);
             border: none;
             color: white;
@@ -90,7 +90,7 @@
             z-index: 100;
         }
         
-        .theme-btn, .undo-btn {
+        .theme-btn, .undo-btn, .view-btn {
             padding: 8px 12px;
             font-size: 16px;
         }
@@ -100,18 +100,18 @@
             font-weight: bold;
         }
         
-        .notes-list-btn:hover, .save-btn:hover, .theme-btn:hover, .undo-btn:hover {
+        .notes-list-btn:hover, .save-btn:hover, .theme-btn:hover, .undo-btn:hover, .view-btn:hover {
             background: rgba(255,255,255,0.3);
         }
         
-        .notes-list-btn:active, .save-btn:active, .theme-btn:active, .undo-btn:active {
+        .notes-list-btn:active, .save-btn:active, .theme-btn:active, .undo-btn:active, .view-btn:active {
             background: rgba(255,255,255,0.5);
             transform: scale(0.95);
         }
         
         /* Styles pour les indicateurs tactiles */
         @media (pointer: coarse) {
-            .notes-list-btn, .save-btn, .theme-btn, .undo-btn {
+            .notes-list-btn, .save-btn, .theme-btn, .undo-btn, .view-btn {
                 min-width: 70px;
                 min-height: 70px;
                 padding: 20px;
@@ -141,12 +141,26 @@
             padding: 20px;
             font-size: 16px;
             line-height: 1.6;
-            white-space: pre-wrap;
             word-wrap: break-word;
             min-height: calc(100vh - 180px);
             color: #333;
             -webkit-user-select: text;
             user-select: text;
+            /* Permettre l'affichage du HTML formaté */
+            white-space: normal;
+        }
+        
+        /* Styles pour les éléments formatés dans la zone de lecture */
+        .note-content b, .note-content strong {
+            font-weight: bold;
+        }
+        
+        .note-content i, .note-content em {
+            font-style: italic;
+        }
+        
+        .note-content u {
+            text-decoration: underline;
         }
         
         .note-content.empty {
@@ -569,6 +583,7 @@
             <div class="header-controls">
                 <button class="undo-btn" id="undo-btn" title="Annuler">↶</button>
                 <button class="theme-btn" id="theme-btn">🌙</button>
+                <button class="view-btn" id="view-btn" title="Basculer affichage">👁️</button>
                 <button class="save-btn" id="save-btn">💾 Sauver</button>
             </div>
         </div>
