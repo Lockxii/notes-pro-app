@@ -866,8 +866,20 @@ function createNewNote() {
     notes[noteId] = note;
     currentNoteId = noteId;
     
-    // Vider l'éditeur
-    document.getElementById('editor').innerHTML = '';
+    // Sauvegarder comme dernière note ouverte
+    localStorage.setItem('lastOpenedNote', noteId);
+    
+    // Vider l'éditeur et rester en mode lecture
+    const editor = document.getElementById('editor');
+    const readingView = document.getElementById('reading-view');
+    
+    editor.innerHTML = '';
+    isEditing = false;
+    editor.classList.add('hidden');
+    readingView.style.display = 'block';
+    
+    // Mettre à jour l'affichage de lecture
+    updateReadingView();
     
     console.log('Nouvelle note créée:', noteId);
     
@@ -900,6 +912,9 @@ function saveCurrentNote() {
         created: notes[currentNoteId]?.created || new Date().toISOString(),
         modified: new Date().toISOString()
     };
+    
+    // Sauvegarder comme dernière note ouverte
+    localStorage.setItem('lastOpenedNote', currentNoteId);
     
     console.log('Note sauvée:', title, content.length + ' caractères');
     saveToStorage();
@@ -999,9 +1014,19 @@ function loadNote(noteId) {
     currentNoteId = noteId;
     const note = notes[noteId];
     const editor = document.getElementById('editor');
+    const readingView = document.getElementById('reading-view');
+    
     editor.innerHTML = note.content; // Utiliser .innerHTML pour contenteditable
     
+    // Sauvegarder cette note comme dernière ouverte
+    localStorage.setItem('lastOpenedNote', noteId);
+    
     console.log('Note chargée:', note.title, note.content.length + ' caractères');
+    
+    // Forcer le retour en mode lecture
+    isEditing = false;
+    editor.classList.add('hidden');
+    readingView.style.display = 'block';
     
     // Mettre à jour l'affichage de lecture
     updateReadingView();
@@ -1028,11 +1053,21 @@ function loadNote(noteId) {
 function loadLastNote() {
     const noteIds = Object.keys(notes);
     if (noteIds.length > 0) {
-        // Charger la note la plus récemment modifiée
-        const lastNoteId = noteIds.reduce((latest, current) => {
-            return notes[current].modified > notes[latest].modified ? current : latest;
-        });
-        loadNote(lastNoteId);
+        // Essayer de charger la dernière note ouverte
+        const lastOpenedNoteId = localStorage.getItem('lastOpenedNote');
+        
+        if (lastOpenedNoteId && notes[lastOpenedNoteId]) {
+            // Charger la dernière note ouverte si elle existe encore
+            loadNote(lastOpenedNoteId);
+            console.log('Chargement de la dernière note ouverte:', lastOpenedNoteId);
+        } else {
+            // Sinon, charger la note la plus récemment modifiée
+            const lastNoteId = noteIds.reduce((latest, current) => {
+                return notes[current].modified > notes[latest].modified ? current : latest;
+            });
+            loadNote(lastNoteId);
+            console.log('Chargement de la note la plus récente:', lastNoteId);
+        }
     }
 }
 
