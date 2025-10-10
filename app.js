@@ -1143,7 +1143,28 @@ function displayNotesList() {
             <div class="note-content">${note.content.replace(/<[^>]*>/g, '').substring(0, 100)}...</div>
             <small>${new Date(note.modified).toLocaleDateString('fr-FR')}</small>
         `;
-        notePreview.addEventListener('click', () => {
+        // Event listener supprimé - utilisation du bouton Ouvrir maintenant
+        
+        // Créer les boutons d'action
+        const actionsContainer = document.createElement('div');
+        actionsContainer.style.display = 'flex';
+        actionsContainer.style.gap = '8px';
+        actionsContainer.style.alignItems = 'center';
+        
+        // Bouton ouvrir
+        const openBtn = document.createElement('button');
+        openBtn.className = 'note-open';
+        openBtn.textContent = '📂 Ouvrir';
+        openBtn.style.background = '#34C759';
+        openBtn.style.color = 'white';
+        openBtn.style.border = 'none';
+        openBtn.style.padding = '8px 12px';
+        openBtn.style.borderRadius = '8px';
+        openBtn.style.cursor = 'pointer';
+        openBtn.style.fontSize = '14px';
+        openBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            console.log('Ouverture de la note:', note.id);
             loadNote(note.id);
             hideNotesList();
         });
@@ -1158,8 +1179,11 @@ function displayNotesList() {
             deleteNote(note.id);
         });
         
+        actionsContainer.appendChild(openBtn);
+        actionsContainer.appendChild(deleteBtn);
+        
         noteItem.appendChild(notePreview);
-        noteItem.appendChild(deleteBtn);
+        noteItem.appendChild(actionsContainer);
         notesList.appendChild(noteItem);
     });
 }

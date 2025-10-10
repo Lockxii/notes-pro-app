@@ -440,10 +440,10 @@
         .note-item {
             padding: 15px;
             border-bottom: 1px solid #e0e0e0;
-            cursor: pointer;
             display: flex;
             justify-content: space-between;
             align-items: center;
+            gap: 15px;
         }
         
         .note-item:hover {
@@ -452,6 +452,7 @@
         
         .note-preview {
             flex: 1;
+            cursor: default;
         }
         
         .note-title {
@@ -473,6 +474,37 @@
             padding: 8px 12px;
             border-radius: 8px;
             cursor: pointer;
+            font-size: 14px;
+            min-height: 36px;
+            transition: all 0.2s;
+        }
+        
+        .note-delete:hover {
+            background: #d32f29;
+        }
+        
+        .note-delete:active {
+            transform: scale(0.95);
+        }
+        
+        .note-open {
+            background: #34C759;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            min-height: 36px;
+            transition: all 0.2s;
+        }
+        
+        .note-open:hover {
+            background: #2fb54a;
+        }
+        
+        .note-open:active {
+            transform: scale(0.95);
         }
         
         .hidden {
