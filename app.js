@@ -1135,8 +1135,9 @@ function displayNotesList() {
         // Créer les boutons d'action
         const actionsContainer = document.createElement('div');
         actionsContainer.style.display = 'flex';
-        actionsContainer.style.gap = '8px';
+        actionsContainer.style.gap = '6px';
         actionsContainer.style.alignItems = 'center';
+        actionsContainer.style.flexShrink = '0';
         
         // Bouton ouvrir
         const openBtn = document.createElement('button');
@@ -1145,18 +1146,49 @@ function displayNotesList() {
         openBtn.style.background = '#34C759';
         openBtn.style.color = 'white';
         openBtn.style.border = 'none';
-        openBtn.style.padding = '10px 16px';
-        openBtn.style.borderRadius = '8px';
+        openBtn.style.padding = '6px 12px';
+        openBtn.style.borderRadius = '6px';
         openBtn.style.cursor = 'pointer';
-        openBtn.style.fontSize = '16px';
+        openBtn.style.fontSize = '14px';
         openBtn.style.fontWeight = '600';
-        openBtn.style.minWidth = '80px';
+        openBtn.style.minWidth = '70px';
         openBtn.style.whiteSpace = 'nowrap';
         openBtn.addEventListener('click', (e) => {
             e.stopPropagation();
-            console.log('Ouverture de la note:', note.id);
-            loadNote(note.id);
-            hideNotesList();
+            console.log('=== CLIC BOUTON OUVRIR ===');
+            console.log('Note ID:', note.id);
+            console.log('Note exists:', !!notes[note.id]);
+            console.log('Note content:', note);
+            
+            try {
+                // Solution directe : forcer le chargement
+                currentNoteId = note.id;
+                const editor = document.getElementById('editor');
+                const readingView = document.getElementById('reading-view');
+                
+                if (editor && readingView) {
+                    // Charger le contenu directement
+                    editor.innerHTML = note.content || '';
+                    
+                    // Sauvegarder comme dernière note ouverte
+                    localStorage.setItem('lastOpenedNote', note.id);
+                    
+                    // Forcer le retour en mode lecture
+                    isEditing = false;
+                    editor.classList.add('hidden');
+                    readingView.style.display = 'block';
+                    
+                    // Mettre à jour l'affichage de lecture
+                    updateReadingView();
+                    
+                    console.log('Note chargée directement avec succès');
+                    hideNotesList();
+                } else {
+                    console.error('Éléments editor ou readingView non trouvés');
+                }
+            } catch (error) {
+                console.error('Erreur lors du chargement de la note:', error);
+            }
         });
         
         // Créer le bouton de suppression
@@ -1166,12 +1198,12 @@ function displayNotesList() {
         deleteBtn.style.background = '#FF3B30';
         deleteBtn.style.color = 'white';
         deleteBtn.style.border = 'none';
-        deleteBtn.style.padding = '10px 16px';
-        deleteBtn.style.borderRadius = '8px';
+        deleteBtn.style.padding = '6px 12px';
+        deleteBtn.style.borderRadius = '6px';
         deleteBtn.style.cursor = 'pointer';
-        deleteBtn.style.fontSize = '16px';
+        deleteBtn.style.fontSize = '14px';
         deleteBtn.style.fontWeight = '600';
-        deleteBtn.style.minWidth = '80px';
+        deleteBtn.style.minWidth = '70px';
         deleteBtn.style.whiteSpace = 'nowrap';
         deleteBtn.addEventListener('click', (e) => {
             e.stopPropagation();
