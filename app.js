@@ -52,17 +52,12 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // Système de routing
 function setupRouting() {
-    // Écouter les changements d'URL
-    window.addEventListener('hashchange', function() {
-        const noteId = getCurrentNoteFromURL();
-        if (noteId && notes[noteId]) {
-            hideNotesList();
-            loadNote(noteId);
-        } else if (!noteId) {
-            // Retour à l'accueil si pas de hash
-            showNotesList();
-        }
-    });
+    // Au chargement, vérifier s'il y a une note dans l'URL
+    const urlNoteId = getCurrentNoteFromURL();
+    if (urlNoteId && notes[urlNoteId]) {
+        console.log('Note trouvée dans URL au chargement:', urlNoteId);
+        loadNote(urlNoteId);
+    }
 }
 
 function initializeApp() {
@@ -1199,6 +1194,15 @@ function displayNotesList() {
         
         noteLink.addEventListener('touchend', function(e) {
             noteItem.style.backgroundColor = 'transparent';
+        });
+        
+        // FORCER l'ouverture de la note au clic
+        noteLink.addEventListener('click', function(e) {
+            e.preventDefault(); // Empêcher navigation par défaut
+            console.log('Clic sur note:', note.id);
+            hideNotesList();
+            loadNote(note.id);
+            updateURL(note.id);
         });
         
         // Créer le conteneur pour le bouton de suppression uniquement
