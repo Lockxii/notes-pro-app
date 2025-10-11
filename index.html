@@ -128,31 +128,40 @@
         
         /* Zone de lecture - scrollable sans déclencher le clavier */
         .reading-view {
-            position: absolute;
-            top: 0;
+            position: fixed;
+            top: 70px; /* Sous le header */
             left: 0;
             right: 0;
-            bottom: 0;
-            overflow-y: auto;
+            bottom: 80px; /* Au-dessus de la toolbar */
+            overflow-y: scroll;
             overflow-x: hidden;
             -webkit-overflow-scrolling: touch;
             padding: 20px;
-            padding-bottom: 120px; /* Espace pour toolbar */
             box-sizing: border-box;
-            height: 100vh; /* Force la hauteur */
+            background: white;
+            z-index: 1;
         }
         
         .note-content {
-            padding: 20px;
+            padding: 0;
             font-size: 16px;
             line-height: 1.6;
             word-wrap: break-word;
-            min-height: calc(100vh - 180px);
+            min-height: 200px;
             color: #333;
             -webkit-user-select: text;
             user-select: text;
             /* Permettre l'affichage du HTML formaté */
             white-space: normal;
+        }
+        
+        /* Force le scroll sur iPhone */
+        .reading-view * {
+            pointer-events: none;
+        }
+        
+        .reading-view {
+            touch-action: pan-y;
         }
         
         /* Styles pour les éléments formatés dans la zone de lecture */
