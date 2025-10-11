@@ -132,11 +132,13 @@
         <h3>🔧 Actions de test</h3>
         <button class="test-button" onclick="clearResults()">🗑️ Nettoyer les résultats</button>
         <button class="test-button" onclick="showDebugInfo()">🐞 Infos debug</button>
+        <button class="test-button" onclick="showRawText()">📝 Voir texte brut</button>
     </div>
     
     <script>
         // Variables globales
         let selectedFile = null;
+        let rawPdfText = '';
         
         // Debug info
         function showDebugInfo() {
@@ -162,6 +164,19 @@
             document.getElementById('file-debug').textContent = 'Aucun fichier sélectionné';
             document.getElementById('extraction-debug').textContent = 'En attente de fichier...';
             selectedFile = null;
+            rawPdfText = '';
+        }
+        
+        // Voir le texte brut
+        function showRawText() {
+            if (rawPdfText) {
+                const sample = rawPdfText.substring(0, 2000);
+                document.getElementById('result-area').textContent = 
+                    '=== TEXTE BRUT (premiers 2000 caractères) ===\n\n' + sample;
+            } else {
+                document.getElementById('result-area').textContent = 
+                    'Aucun texte brut disponible. Sélectionnez d\'abord un PDF.';
+            }
         }
         
         // Gestion de la sélection de fichier
@@ -195,7 +210,7 @@ Dernière modification: ${new Date(selectedFile.lastModified).toLocaleString()}
             }
         });
         
-        // Fonction d'extraction de texte PDF (version simple)
+        // Fonction d'extraction de texte PDF (version améliorée)
         async function extractTextFromPDF(file) {
             try {
                 document.getElementById('extraction-debug').innerHTML = 
@@ -204,43 +219,96 @@ Dernière modification: ${new Date(selectedFile.lastModified).toLocaleString()}
                 const arrayBuffer = await file.arrayBuffer();
                 const uint8Array = new Uint8Array(arrayBuffer);
                 
-                // Conversion basique en texte
+                // Conversion en string avec décodage UTF-8 et Latin-1
                 let text = '';
-                for (let i = 0; i < uint8Array.length; i++) {
-                    const char = String.fromCharCode(uint8Array[i]);
-                    // Filtrer les caractères imprimables
-                    if (char.match(/[\x20-\x7E]/)) {
-                        text += char;
-                    }
+                let textLatin = '';
+                
+                // Essayer UTF-8
+                try {
+                    const decoder = new TextDecoder('utf-8');
+                    text = decoder.decode(uint8Array);
+                } catch (e) {
+                    // Fallback vers Latin-1
+                    const decoder = new TextDecoder('latin1');
+                    textLatin = decoder.decode(uint8Array);
                 }
                 
-                // Nettoyage du texte
-                text = text.replace(/\s+/g, ' ').trim();
+                // Si UTF-8 n'a pas marché, utiliser Latin-1
+                if (!text) text = textLatin;
                 
-                // Recherche de patterns de texte dans un PDF
+                // Sauvegarder pour le debug
+                rawPdfText = text;
+                
+                document.getElementById('extraction-debug').innerHTML += 
+                    '<br>Décodage terminé, recherche de texte...';
+                
                 let extractedText = '';
                 
-                // Pattern 1: Texte entre parenthèses (format PDF)
-                const textMatches = text.match(/\(([^)]+)\)/g);
-                if (textMatches) {
-                    textMatches.forEach(match => {
+                // Méthode 1: Texte entre parenthèses (standard PDF)
+                const parenthesesMatches = text.match(/\(([^)]*)\)/g);
+                if (parenthesesMatches) {
+                    parenthesesMatches.forEach(match => {
                         const content = match.replace(/[()]/g, '');
-                        if (content.length > 2) {
+                        // Filtrer le contenu lisible
+                        if (content.length > 1 && /[a-zA-ZÀ-ÿ]/.test(content)) {
                             extractedText += content + ' ';
                         }
                     });
                 }
                 
-                // Pattern 2: Recherche de mots communs
-                const wordMatches = text.match(/[A-Za-zÀ-ÿ]{3,}/g);
-                if (wordMatches && extractedText.length < 50) {
-                    extractedText += wordMatches.slice(0, 100).join(' ');
+                // Méthode 2: Texte entre crochets
+                const bracketMatches = text.match(/\[([^\]]*)\]/g);
+                if (bracketMatches) {
+                    bracketMatches.forEach(match => {
+                        const content = match.replace(/[\[\]]/g, '');
+                        if (content.length > 1 && /[a-zA-ZÀ-ÿ]/.test(content)) {
+                            extractedText += content + ' ';
+                        }
+                    });
                 }
                 
-                // Si toujours pas de texte, prendre un échantillon
-                if (!extractedText.trim()) {
-                    extractedText = text.substring(0, 500).replace(/[^\x20-\x7E]/g, ' ').replace(/\s+/g, ' ').trim();
+                // Méthode 3: Recherche de séquences "Tj" (commande PDF pour afficher du texte)
+                const tjMatches = text.match(/\(([^)]+)\)\s*Tj/g);
+                if (tjMatches) {
+                    tjMatches.forEach(match => {
+                        const content = match.replace(/\(([^)]+)\)\s*Tj/, '$1');
+                        if (content.length > 1 && /[a-zA-ZÀ-ÿ]/.test(content)) {
+                            extractedText += content + ' ';
+                        }
+                    });
                 }
+                
+                // Méthode 4: Recherche de mots dans les streams décompressés
+                const streamMatches = text.match(/stream[\s\S]*?endstream/g);
+                if (streamMatches) {
+                    streamMatches.forEach(stream => {
+                        // Chercher du texte lisible dans les streams
+                        const words = stream.match(/[a-zA-ZÀ-ÿ]{3,}/g);
+                        if (words) {
+                            words.forEach(word => {
+                                if (word.length > 2 && extractedText.indexOf(word) === -1) {
+                                    extractedText += word + ' ';
+                                }
+                            });
+                        }
+                    });
+                }
+                
+                // Méthode 5: Extraction directe de mots (fallback)
+                if (extractedText.length < 20) {
+                    const directWords = text.match(/\b[a-zA-ZÀ-ÿ]{3,}\b/g);
+                    if (directWords) {
+                        // Prendre les 50 premiers mots uniques
+                        const uniqueWords = [...new Set(directWords.slice(0, 50))];
+                        extractedText += uniqueWords.join(' ');
+                    }
+                }
+                
+                // Nettoyage final
+                extractedText = extractedText
+                    .replace(/\s+/g, ' ')
+                    .replace(/[^\w\sÀ-ÿ.,!?;:-]/g, '')
+                    .trim();
                 
                 // Affichage des résultats
                 const debugInfo = `
@@ -248,16 +316,24 @@ Dernière modification: ${new Date(selectedFile.lastModified).toLocaleString()}
 Taille du buffer: ${arrayBuffer.byteLength} bytes<br>
 Texte brut trouvé: ${text.length} caractères<br>
 Texte extrait: ${extractedText.length} caractères<br>
-Patterns trouvés: ${textMatches ? textMatches.length : 0}
+Parenthèses trouvées: ${parenthesesMatches ? parenthesesMatches.length : 0}<br>
+Crochets trouvés: ${bracketMatches ? bracketMatches.length : 0}<br>
+Commandes Tj: ${tjMatches ? tjMatches.length : 0}<br>
+Streams: ${streamMatches ? streamMatches.length : 0}
                 `;
                 
                 document.getElementById('extraction-debug').innerHTML = debugInfo;
                 
                 if (extractedText.trim()) {
-                    document.getElementById('result-area').textContent = extractedText.trim();
+                    // Limiter l'affichage à 1000 caractères pour éviter les débordements
+                    const displayText = extractedText.length > 1000 
+                        ? extractedText.substring(0, 1000) + '\n\n[... texte tronqué ...]'
+                        : extractedText;
+                    
+                    document.getElementById('result-area').textContent = displayText.trim();
                 } else {
                     document.getElementById('result-area').innerHTML = 
-                        '<em style="color: #FF3B30;">❌ Impossible d\'extraire le texte de ce PDF.<br>Le fichier pourrait être protégé ou dans un format non supporté.</em>';
+                        '<em style="color: #FF3B30;">❌ Impossible d\'extraire le texte de ce PDF.<br>Le fichier pourrait être protégé, crypté ou dans un format non supporté.</em>';
                 }
                 
             } catch (error) {
