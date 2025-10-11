@@ -1200,12 +1200,14 @@ function displayNotesList() {
             
             // Charger le contenu
             editor.innerHTML = note.content;
-            noteContent.innerHTML = note.content || '';
             
-            // Mode lecture
+            // Mode lecture avec formatage HTML
             isEditing = false;
             editor.classList.add('hidden');
             readingView.style.display = 'block';
+            
+            // Utiliser updateReadingView pour avoir le formatage
+            updateReadingView();
             
             // Sauvegarder
             currentNoteId = note.id;
