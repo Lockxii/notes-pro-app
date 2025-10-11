@@ -1177,33 +1177,28 @@ function displayNotesList() {
         noteItem.style.cursor = 'pointer';
         noteItem.style.transition = 'background-color 0.2s';
         
-        // Créer la preview (cliquable pour ouvrir la note)
-        const notePreview = document.createElement('div');
-        notePreview.className = 'note-preview';
-        notePreview.innerHTML = `
+        // Créer un vrai LIEN cliquable vers la note
+        const noteLink = document.createElement('a');
+        noteLink.href = `#note/${note.id}`;
+        noteLink.className = 'note-preview-link';
+        noteLink.style.textDecoration = 'none';
+        noteLink.style.color = 'inherit';
+        noteLink.style.display = 'block';
+        noteLink.style.flex = '1';
+        
+        noteLink.innerHTML = `
             <div class="note-title">${note.title}</div>
             <div class="note-content">${note.content.replace(/<[^>]*>/g, '').substring(0, 100)}...</div>
             <small>${new Date(note.modified).toLocaleDateString('fr-FR')}</small>
         `;
         
-        // Tap sur la preview pour ouvrir la note (iPhone friendly)
-        notePreview.addEventListener('touchstart', function(e) {
-            e.stopPropagation();
+        // Effet hover sur mobile
+        noteLink.addEventListener('touchstart', function(e) {
             noteItem.style.backgroundColor = '#f0f0f0';
         });
         
-        notePreview.addEventListener('touchend', function(e) {
-            e.stopPropagation();
+        noteLink.addEventListener('touchend', function(e) {
             noteItem.style.backgroundColor = 'transparent';
-            // Navigation avec URL
-            updateURL(note.id);
-        });
-        
-        // Click pour desktop
-        notePreview.addEventListener('click', function(e) {
-            e.stopPropagation();
-            // Navigation avec URL
-            updateURL(note.id);
         });
         
         // Créer le conteneur pour le bouton de suppression uniquement
@@ -1234,7 +1229,7 @@ function displayNotesList() {
         
         actionsContainer.appendChild(deleteBtn);
         
-        noteItem.appendChild(notePreview);
+        noteItem.appendChild(noteLink);
         noteItem.appendChild(actionsContainer);
         notesList.appendChild(noteItem);
     });
