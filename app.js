@@ -1172,37 +1172,46 @@ function displayNotesList() {
         noteItem.style.cursor = 'pointer';
         noteItem.style.transition = 'background-color 0.2s';
         
-        // Créer un vrai LIEN cliquable vers la note
-        const noteLink = document.createElement('a');
-        noteLink.href = `#note/${note.id}`;
-        noteLink.className = 'note-preview-link';
-        noteLink.style.textDecoration = 'none';
-        noteLink.style.color = 'inherit';
-        noteLink.style.display = 'block';
-        noteLink.style.flex = '1';
+        // SUPER SIMPLE: juste un div cliquable
+        const notePreview = document.createElement('div');
+        notePreview.className = 'note-preview';
+        notePreview.style.flex = '1';
+        notePreview.style.cursor = 'pointer';
         
-        noteLink.innerHTML = `
+        notePreview.innerHTML = `
             <div class="note-title">${note.title}</div>
             <div class="note-content">${note.content.replace(/<[^>]*>/g, '').substring(0, 100)}...</div>
             <small>${new Date(note.modified).toLocaleDateString('fr-FR')}</small>
         `;
         
-        // Effet hover sur mobile
-        noteLink.addEventListener('touchstart', function(e) {
-            noteItem.style.backgroundColor = '#f0f0f0';
-        });
-        
-        noteLink.addEventListener('touchend', function(e) {
-            noteItem.style.backgroundColor = 'transparent';
-        });
-        
-        // FORCER l'ouverture de la note au clic
-        noteLink.addEventListener('click', function(e) {
-            e.preventDefault(); // Empêcher navigation par défaut
-            console.log('Clic sur note:', note.id);
-            hideNotesList();
-            loadNote(note.id);
-            updateURL(note.id);
+        // UN SEUL EVENT: tap pour ouvrir
+        notePreview.addEventListener('click', function(e) {
+            e.stopPropagation();
+            console.log('=== OUVERTURE NOTE ===');
+            console.log('Note ID:', note.id);
+            
+            // 1. Fermer le modal
+            document.getElementById('notes-modal').style.display = 'none';
+            
+            // 2. Charger la note
+            const editor = document.getElementById('editor');
+            const readingView = document.getElementById('reading-view');
+            const noteContent = document.getElementById('note-content');
+            
+            // Charger le contenu
+            editor.innerHTML = note.content;
+            noteContent.innerHTML = note.content || '';
+            
+            // Mode lecture
+            isEditing = false;
+            editor.classList.add('hidden');
+            readingView.style.display = 'block';
+            
+            // Sauvegarder
+            currentNoteId = note.id;
+            localStorage.setItem('lastOpenedNote', note.id);
+            
+            console.log('Note ouverte:', note.title);
         });
         
         // Créer le conteneur pour le bouton de suppression uniquement
@@ -1233,7 +1242,7 @@ function displayNotesList() {
         
         actionsContainer.appendChild(deleteBtn);
         
-        noteItem.appendChild(noteLink);
+        noteItem.appendChild(notePreview);
         noteItem.appendChild(actionsContainer);
         notesList.appendChild(noteItem);
     });
