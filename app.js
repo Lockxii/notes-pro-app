@@ -3,6 +3,23 @@ let currentNoteId = null;
 let notes = JSON.parse(localStorage.getItem('notes')) || {};
 let toolbarVisible = false;
 
+// Système de routing avec hash URL
+function updateURL(noteId) {
+    if (noteId) {
+        window.location.hash = `note/${noteId}`;
+    } else {
+        window.location.hash = '';
+    }
+}
+
+function getCurrentNoteFromURL() {
+    const hash = window.location.hash;
+    if (hash.startsWith('#note/')) {
+        return hash.replace('#note/', '');
+    }
+    return null;
+}
+
 // Debug chargement initial
 console.log('CHARGEMENT INITIAL - localStorage notes:', localStorage.getItem('notes'));
 console.log('CHARGEMENT INITIAL - notes parsées:', notes);
@@ -29,8 +46,24 @@ document.addEventListener('DOMContentLoaded', function() {
     showDebugInfo();
     initializeApp();
     setupEventListeners();
+    setupRouting();
     loadLastNote();
 });
+
+// Système de routing
+function setupRouting() {
+    // Écouter les changements d'URL
+    window.addEventListener('hashchange', function() {
+        const noteId = getCurrentNoteFromURL();
+        if (noteId && notes[noteId]) {
+            hideNotesList();
+            loadNote(noteId);
+        } else if (!noteId) {
+            // Retour à l'accueil si pas de hash
+            showNotesList();
+        }
+    });
+}
 
 function initializeApp() {
     // Registrer le service worker pour PWA
@@ -861,6 +894,9 @@ function createNewNote() {
     // Sauvegarder comme dernière note ouverte
     localStorage.setItem('lastOpenedNote', noteId);
     
+    // Mettre à jour l'URL
+    updateURL(noteId);
+    
     // Vider l'éditeur et rester en mode lecture
     const editor = document.getElementById('editor');
     const readingView = document.getElementById('reading-view');
@@ -1020,6 +1056,11 @@ function loadNote(noteId) {
     // Sauvegarder cette note comme dernière ouverte
     localStorage.setItem('lastOpenedNote', noteId);
     
+    // Mettre à jour l'URL si pas déjà fait
+    if (getCurrentNoteFromURL() !== noteId) {
+        updateURL(noteId);
+    }
+    
     console.log('Note chargée:', note.title, note.content.length + ' caractères');
     
     // Forcer le retour en mode lecture
@@ -1050,6 +1091,14 @@ function loadNote(noteId) {
 }
 
 function loadLastNote() {
+    // D'abord vérifier s'il y a une note dans l'URL
+    const urlNoteId = getCurrentNoteFromURL();
+    if (urlNoteId && notes[urlNoteId]) {
+        loadNote(urlNoteId);
+        console.log('Chargement note depuis URL:', urlNoteId);
+        return;
+    }
+
     const noteIds = Object.keys(notes);
     if (noteIds.length > 0) {
         // Essayer de charger la dernière note ouverte
@@ -1146,17 +1195,15 @@ function displayNotesList() {
         notePreview.addEventListener('touchend', function(e) {
             e.stopPropagation();
             noteItem.style.backgroundColor = 'transparent';
-            // Fermer le modal et ouvrir la note
-            hideNotesList();
-            loadNote(note.id);
+            // Navigation avec URL
+            updateURL(note.id);
         });
         
         // Click pour desktop
         notePreview.addEventListener('click', function(e) {
             e.stopPropagation();
-            // Fermer le modal et ouvrir la note
-            hideNotesList();
-            loadNote(note.id);
+            // Navigation avec URL
+            updateURL(note.id);
         });
         
         // Créer le conteneur pour le bouton de suppression uniquement
