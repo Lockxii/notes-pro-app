@@ -97,7 +97,7 @@ function setupEventListeners() {
             noteContent.innerHTML = content;
             noteContent.classList.remove('empty');
         } else {
-            noteContent.textContent = 'Double-tapez pour commencer à écrire...';
+            noteContent.innerHTML = ''; // Plus de placeholder chiant
             noteContent.classList.add('empty');
         }
     }
@@ -1146,14 +1146,16 @@ function displayNotesList() {
         notePreview.addEventListener('touchend', function(e) {
             e.stopPropagation();
             noteItem.style.backgroundColor = 'transparent';
-            // Ouvrir la note en mode LECTURE
+            // Fermer le modal et ouvrir la note
+            hideNotesList();
             loadNote(note.id);
         });
         
         // Click pour desktop
         notePreview.addEventListener('click', function(e) {
             e.stopPropagation();
-            // Ouvrir la note en mode LECTURE
+            // Fermer le modal et ouvrir la note
+            hideNotesList();
             loadNote(note.id);
         });
         
