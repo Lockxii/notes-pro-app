@@ -122,9 +122,31 @@
     </div>
     
     <div class="step">
-        <h3>Étape 3: Résultat</h3>
+        <h3>Étape 3: Résultat brut</h3>
         <div class="result-area" id="result-area">
             Le texte extrait du PDF apparaîtra ici...
+        </div>
+    </div>
+    
+    <div class="step">
+        <h3>Étape 4: Texte propre (éditable)</h3>
+        <textarea id="clean-text-area" placeholder="Le texte nettoyé apparaîtra ici. Tu peux l'éditer avant de l'utiliser." style="
+            background: rgba(255,255,255,0.95);
+            color: #333;
+            border: 2px solid #007AFF;
+            border-radius: 15px;
+            padding: 20px;
+            width: 100%;
+            min-height: 200px;
+            font-size: 16px;
+            line-height: 1.5;
+            font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+            resize: vertical;
+            box-sizing: border-box;
+        "></textarea>
+        <div style="display: flex; gap: 10px; margin-top: 10px;">
+            <button class="test-button" onclick="reCleanText()" style="flex: 1;">🧹 Re-nettoyer</button>
+            <button class="test-button" onclick="copyCleanText()" style="flex: 1;">📋 Copier</button>
         </div>
     </div>
     
@@ -176,6 +198,90 @@
             } else {
                 document.getElementById('result-area').textContent = 
                     'Aucun texte brut disponible. Sélectionnez d\'abord un PDF.';
+            }
+        }
+        
+        // Nettoyer et formater le texte automatiquement
+        function cleanExtractedText(rawText) {
+            if (!rawText) return '';
+            
+            let cleaned = rawText
+                // Supprimer les caractères de contrôle et non-imprimables
+                .replace(/[\x00-\x1F\x7F-\x9F]/g, ' ')
+                // Supprimer les caractères spéciaux PDF
+                .replace(/[^\w\sÀ-ÿ.,!?;:()\-'"]/g, ' ')
+                // Nettoyer les espaces multiples
+                .replace(/\s+/g, ' ')
+                // Supprimer les mots trop courts ou suspects
+                .split(' ')
+                .filter(word => word.length > 1 && !/^[^a-zA-ZÀ-ÿ]+$/.test(word))
+                .join(' ')
+                // Ajouter des points à la fin des phrases si manquants
+                .replace(/([a-zA-ZÀ-ÿ])\s+([A-ZÀ-Ÿ])/g, '$1. $2')
+                // Nettoyer les espaces autour de la ponctuation
+                .replace(/\s+([.,!?;:])/g, '$1')
+                .replace(/([.,!?;:])\s*/g, '$1 ')
+                // Trim final
+                .trim();
+            
+            return cleaned;
+        }
+        
+        // Re-nettoyer le texte
+        function reCleanText() {
+            const resultArea = document.getElementById('result-area');
+            const cleanTextArea = document.getElementById('clean-text-area');
+            
+            // Prendre le texte brut du résultat ou le texte déjà dans le champ
+            let textToClean = cleanTextArea.value || resultArea.textContent;
+            
+            if (!textToClean.trim()) {
+                alert('Aucun texte à nettoyer !');
+                return;
+            }
+            
+            const cleaned = cleanExtractedText(textToClean);
+            cleanTextArea.value = cleaned;
+            
+            // Feedback visuel
+            const button = event.target;
+            const originalText = button.textContent;
+            button.textContent = '✨ Nettoyé !';
+            button.style.background = '#34C759';
+            
+            setTimeout(() => {
+                button.textContent = originalText;
+                button.style.background = '#007AFF';
+            }, 1500);
+        }
+        
+        // Copier le texte propre
+        async function copyCleanText() {
+            const cleanTextArea = document.getElementById('clean-text-area');
+            const text = cleanTextArea.value;
+            
+            if (!text.trim()) {
+                alert('Aucun texte à copier !');
+                return;
+            }
+            
+            try {
+                await navigator.clipboard.writeText(text);
+                // Feedback visuel
+                const button = event.target;
+                const originalText = button.textContent;
+                button.textContent = '✅ Copié !';
+                button.style.background = '#34C759';
+                
+                setTimeout(() => {
+                    button.textContent = originalText;
+                    button.style.background = '#007AFF';
+                }, 2000);
+            } catch (err) {
+                // Fallback pour les navigateurs qui ne supportent pas clipboard API
+                cleanTextArea.select();
+                document.execCommand('copy');
+                alert('Texte copié dans le presse-papiers !');
             }
         }
         
@@ -325,15 +431,28 @@ Streams: ${streamMatches ? streamMatches.length : 0}
                 document.getElementById('extraction-debug').innerHTML = debugInfo;
                 
                 if (extractedText.trim()) {
-                    // Limiter l'affichage à 1000 caractères pour éviter les débordements
+                    // Afficher le résultat brut (limité)
                     const displayText = extractedText.length > 1000 
                         ? extractedText.substring(0, 1000) + '\n\n[... texte tronqué ...]'
                         : extractedText;
                     
                     document.getElementById('result-area').textContent = displayText.trim();
+                    
+                    // Nettoyer automatiquement et remplir le champ éditable
+                    const cleanedText = cleanExtractedText(extractedText);
+                    document.getElementById('clean-text-area').value = cleanedText;
+                    
+                    // Scroll vers le champ propre
+                    document.getElementById('clean-text-area').scrollIntoView({ 
+                        behavior: 'smooth', 
+                        block: 'center' 
+                    });
+                    
                 } else {
                     document.getElementById('result-area').innerHTML = 
                         '<em style="color: #FF3B30;">❌ Impossible d\'extraire le texte de ce PDF.<br>Le fichier pourrait être protégé, crypté ou dans un format non supporté.</em>';
+                    
+                    document.getElementById('clean-text-area').value = '';
                 }
                 
             } catch (error) {
