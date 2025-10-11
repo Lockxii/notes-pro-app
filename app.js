@@ -704,25 +704,107 @@ function handleImageUpload(event) {
 
 function insertImage(src) {
     const editor = document.getElementById('editor');
-    const img = document.createElement('img');
-    img.src = src;
-    img.style.maxWidth = '300px';
-    img.style.height = 'auto';
-    img.style.cursor = 'move';
-    img.draggable = false; // Empêcher le drag natif du navigateur
     
-    // Wrapper pour rendre l'image déplaçable et redimensionnable
+    // Wrapper avec toolbar pour iPhone
     const wrapper = document.createElement('div');
     wrapper.className = 'resizable-image';
     wrapper.style.position = 'relative';
-    wrapper.style.display = 'inline-block';
-    wrapper.style.margin = '5px';
-    wrapper.appendChild(img);
+    wrapper.style.display = 'block';
+    wrapper.style.margin = '10px 0';
+    wrapper.style.textAlign = 'center';
+    wrapper.style.border = '2px solid transparent';
+    wrapper.style.borderRadius = '8px';
+    wrapper.style.padding = '10px';
     
-    // Handle de redimensionnement
-    const resizeHandle = document.createElement('div');
-    resizeHandle.className = 'resize-handle';
-    wrapper.appendChild(resizeHandle);
+    // Image
+    const img = document.createElement('img');
+    img.src = src;
+    img.style.width = '250px';
+    img.style.height = 'auto';
+    img.style.borderRadius = '8px';
+    img.style.display = 'block';
+    img.style.margin = '0 auto 10px auto';
+    
+    // Toolbar avec boutons iPhone-friendly
+    const toolbar = document.createElement('div');
+    toolbar.style.display = 'flex';
+    toolbar.style.justifyContent = 'center';
+    toolbar.style.gap = '10px';
+    toolbar.style.background = 'rgba(0,0,0,0.1)';
+    toolbar.style.borderRadius = '20px';
+    toolbar.style.padding = '8px';
+    toolbar.style.opacity = '0';
+    toolbar.style.transition = 'opacity 0.3s';
+    
+    // Boutons de taille
+    const sizes = [
+        { label: 'Petit', width: '150px' },
+        { label: 'Moyen', width: '250px' },
+        { label: 'Grand', width: '350px' }
+    ];
+    
+    sizes.forEach(size => {
+        const btn = document.createElement('button');
+        btn.textContent = size.label;
+        btn.style.background = '#007AFF';
+        btn.style.color = 'white';
+        btn.style.border = 'none';
+        btn.style.borderRadius = '15px';
+        btn.style.padding = '8px 12px';
+        btn.style.fontSize = '14px';
+        btn.style.cursor = 'pointer';
+        
+        btn.onclick = (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            img.style.width = size.width;
+            autoSave();
+        };
+        
+        toolbar.appendChild(btn);
+    });
+    
+    // Bouton supprimer
+    const deleteBtn = document.createElement('button');
+    deleteBtn.textContent = '🗑️';
+    deleteBtn.style.background = '#FF3B30';
+    deleteBtn.style.color = 'white';
+    deleteBtn.style.border = 'none';
+    deleteBtn.style.borderRadius = '15px';
+    deleteBtn.style.padding = '8px 12px';
+    deleteBtn.style.fontSize = '14px';
+    deleteBtn.style.cursor = 'pointer';
+    
+    deleteBtn.onclick = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        wrapper.remove();
+        autoSave();
+    };
+    
+    toolbar.appendChild(deleteBtn);
+    
+    // Assemblage
+    wrapper.appendChild(img);
+    wrapper.appendChild(toolbar);
+    
+    // Afficher toolbar au tap sur l'image
+    img.onclick = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        // Masquer toutes les autres toolbars
+        document.querySelectorAll('.resizable-image').forEach(w => {
+            if (w !== wrapper) {
+                w.style.border = '2px solid transparent';
+                w.querySelector('div').style.opacity = '0';
+            }
+        });
+        
+        // Afficher cette toolbar
+        wrapper.style.border = '2px solid #007AFF';
+        toolbar.style.opacity = '1';
+    };
     
     // Insertion dans l'éditeur
     const selection = window.getSelection();
@@ -733,9 +815,6 @@ function insertImage(src) {
     } else {
         editor.appendChild(wrapper);
     }
-    
-    // Événements pour l'image (déplacement + redimensionnement)
-    setupImageEvents(wrapper, img, resizeHandle);
     
     // Sauvegarde automatique
     autoSave();
@@ -862,13 +941,7 @@ function setupImageEvents(wrapper, img, resizeHandle) {
 }
 
 function selectImage(wrapper) {
-    // Désélectionner toutes les autres images
-    document.querySelectorAll('.resizable-image').forEach(img => {
-        img.classList.remove('selected');
-    });
-    
-    // Sélectionner cette image
-    wrapper.classList.add('selected');
+    // Plus besoin avec le nouveau système de toolbar
     selectedImage = wrapper;
 }
 
