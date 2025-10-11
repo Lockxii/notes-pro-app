@@ -1091,9 +1091,13 @@ function saveToStorage() {
 }
 
 // Interface des notes
-function showNotesList() {
-    displayNotesList();
-    document.getElementById('notes-modal').style.display = 'block';
+function showNotesList(show = true) {
+    if (show) {
+        displayNotesList();
+        document.getElementById('notes-modal').style.display = 'block';
+    } else {
+        hideNotesList();
+    }
 }
 
 function hideNotesList() {
@@ -1142,22 +1146,15 @@ function displayNotesList() {
         notePreview.addEventListener('touchend', function(e) {
             e.stopPropagation();
             noteItem.style.backgroundColor = 'transparent';
-            // Ouvrir la note directement
-            document.getElementById('editor').innerHTML = note.content;
-            currentNoteId = note.id;
-            localStorage.setItem('lastOpenedNote', note.id);
-            showNotesList(false);
-            switchToEditMode();
+            // Ouvrir la note en mode LECTURE
+            loadNote(note.id);
         });
         
         // Click pour desktop
         notePreview.addEventListener('click', function(e) {
             e.stopPropagation();
-            document.getElementById('editor').innerHTML = note.content;
-            currentNoteId = note.id;
-            localStorage.setItem('lastOpenedNote', note.id);
-            showNotesList(false);
-            switchToEditMode();
+            // Ouvrir la note en mode LECTURE
+            loadNote(note.id);
         });
         
         // Créer le conteneur pour le bouton de suppression uniquement
