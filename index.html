@@ -126,20 +126,18 @@
             overflow: hidden;
         }
         
-        /* Zone de lecture - scrollable sans déclencher le clavier */
+        /* Zone de lecture - scrollable sur iPhone */
         .reading-view {
-            position: fixed;
-            top: 70px; /* Sous le header */
+            position: absolute;
+            top: 0;
             left: 0;
             right: 0;
-            bottom: 80px; /* Au-dessus de la toolbar */
-            overflow-y: scroll;
-            overflow-x: hidden;
+            bottom: 0;
+            overflow-y: auto;
             -webkit-overflow-scrolling: touch;
             padding: 20px;
+            padding-bottom: 100px;
             box-sizing: border-box;
-            background: white;
-            z-index: 1;
         }
         
         .note-content {
@@ -155,14 +153,7 @@
             white-space: normal;
         }
         
-        /* Force le scroll sur iPhone */
-        .reading-view * {
-            pointer-events: none;
-        }
-        
-        .reading-view {
-            touch-action: pan-y;
-        }
+
         
         /* Styles pour les éléments formatés dans la zone de lecture */
         .note-content b, .note-content strong {
