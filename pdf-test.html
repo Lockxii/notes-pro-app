@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="PDF Test">
+    <title>Test PDF Import - iPhone</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            height: 100vh;
+            overflow-x: hidden;
+            color: white;
+            padding: 20px;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .test-container {
+            background: rgba(255,255,255,0.1);
+            border-radius: 20px;
+            padding: 20px;
+            margin-bottom: 20px;
+            backdrop-filter: blur(10px);
+        }
+        
+        .test-button {
+            background: #007AFF;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 15px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            margin: 10px 0;
+            transition: all 0.2s;
+            -webkit-tap-highlight-color: rgba(255,255,255,0.3);
+            touch-action: manipulation;
+        }
+        
+        .test-button:active {
+            transform: scale(0.95);
+            background: #0056b3;
+        }
+        
+        .result-area {
+            background: rgba(255,255,255,0.9);
+            color: #333;
+            border-radius: 15px;
+            padding: 20px;
+            margin: 20px 0;
+            min-height: 200px;
+            font-size: 16px;
+            line-height: 1.5;
+            white-space: pre-wrap;
+            overflow-y: auto;
+            max-height: 300px;
+        }
+        
+        .debug-info {
+            background: rgba(0,0,0,0.3);
+            border-radius: 10px;
+            padding: 15px;
+            margin: 10px 0;
+            font-family: monospace;
+            font-size: 14px;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+        
+        input[type="file"] {
+            display: none;
+        }
+        
+        .step {
+            margin: 20px 0;
+            padding: 15px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 10px;
+            border-left: 4px solid #34C759;
+        }
+        
+        .step h3 {
+            color: #34C759;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🔬 Test PDF Import</h1>
+        <p>Test d'import PDF pour iPhone</p>
+    </div>
+    
+    <div class="step">
+        <h3>Étape 1: Test du sélecteur de fichier</h3>
+        <button class="test-button" id="select-pdf-btn">📄 Sélectionner un PDF</button>
+        <input type="file" id="pdf-input" accept=".pdf">
+        <div class="debug-info" id="file-debug">
+            Aucun fichier sélectionné
+        </div>
+    </div>
+    
+    <div class="step">
+        <h3>Étape 2: Extraction du texte</h3>
+        <div class="debug-info" id="extraction-debug">
+            En attente de fichier...
+        </div>
+    </div>
+    
+    <div class="step">
+        <h3>Étape 3: Résultat</h3>
+        <div class="result-area" id="result-area">
+            Le texte extrait du PDF apparaîtra ici...
+        </div>
+    </div>
+    
+    <div class="test-container">
+        <h3>🔧 Actions de test</h3>
+        <button class="test-button" onclick="clearResults()">🗑️ Nettoyer les résultats</button>
+        <button class="test-button" onclick="showDebugInfo()">🐞 Infos debug</button>
+    </div>
+    
+    <script>
+        // Variables globales
+        let selectedFile = null;
+        
+        // Debug info
+        function showDebugInfo() {
+            const info = {
+                userAgent: navigator.userAgent,
+                platform: navigator.platform,
+                fileSupport: 'File' in window,
+                fileReaderSupport: 'FileReader' in window,
+                touchSupport: 'ontouchstart' in window,
+                viewport: {
+                    width: window.innerWidth,
+                    height: window.innerHeight
+                }
+            };
+            
+            document.getElementById('extraction-debug').innerHTML = 
+                '<strong>Debug Info:</strong><br>' + JSON.stringify(info, null, 2);
+        }
+        
+        // Nettoyer les résultats
+        function clearResults() {
+            document.getElementById('result-area').textContent = 'Le texte extrait du PDF apparaîtra ici...';
+            document.getElementById('file-debug').textContent = 'Aucun fichier sélectionné';
+            document.getElementById('extraction-debug').textContent = 'En attente de fichier...';
+            selectedFile = null;
+        }
+        
+        // Gestion de la sélection de fichier
+        document.getElementById('select-pdf-btn').addEventListener('click', function(e) {
+            e.preventDefault();
+            console.log('Bouton PDF cliqué');
+            document.getElementById('pdf-input').click();
+        });
+        
+        // Gestion du changement de fichier
+        document.getElementById('pdf-input').addEventListener('change', function(event) {
+            const files = event.target.files;
+            console.log('Fichiers sélectionnés:', files.length);
+            
+            if (files.length > 0) {
+                selectedFile = files[0];
+                
+                // Affichage des infos du fichier
+                const fileInfo = `
+Nom: ${selectedFile.name}
+Taille: ${(selectedFile.size / 1024).toFixed(2)} KB
+Type: ${selectedFile.type}
+Dernière modification: ${new Date(selectedFile.lastModified).toLocaleString()}
+                `;
+                
+                document.getElementById('file-debug').innerHTML = 
+                    '<strong>Fichier sélectionné:</strong><br>' + fileInfo;
+                
+                // Lancer l'extraction
+                extractTextFromPDF(selectedFile);
+            }
+        });
+        
+        // Fonction d'extraction de texte PDF (version simple)
+        async function extractTextFromPDF(file) {
+            try {
+                document.getElementById('extraction-debug').innerHTML = 
+                    '<strong>🔄 Extraction en cours...</strong><br>Lecture du fichier PDF...';
+                
+                const arrayBuffer = await file.arrayBuffer();
+                const uint8Array = new Uint8Array(arrayBuffer);
+                
+                // Conversion basique en texte
+                let text = '';
+                for (let i = 0; i < uint8Array.length; i++) {
+                    const char = String.fromCharCode(uint8Array[i]);
+                    // Filtrer les caractères imprimables
+                    if (char.match(/[\x20-\x7E]/)) {
+                        text += char;
+                    }
+                }
+                
+                // Nettoyage du texte
+                text = text.replace(/\s+/g, ' ').trim();
+                
+                // Recherche de patterns de texte dans un PDF
+                let extractedText = '';
+                
+                // Pattern 1: Texte entre parenthèses (format PDF)
+                const textMatches = text.match(/\(([^)]+)\)/g);
+                if (textMatches) {
+                    textMatches.forEach(match => {
+                        const content = match.replace(/[()]/g, '');
+                        if (content.length > 2) {
+                            extractedText += content + ' ';
+                        }
+                    });
+                }
+                
+                // Pattern 2: Recherche de mots communs
+                const wordMatches = text.match(/[A-Za-zÀ-ÿ]{3,}/g);
+                if (wordMatches && extractedText.length < 50) {
+                    extractedText += wordMatches.slice(0, 100).join(' ');
+                }
+                
+                // Si toujours pas de texte, prendre un échantillon
+                if (!extractedText.trim()) {
+                    extractedText = text.substring(0, 500).replace(/[^\x20-\x7E]/g, ' ').replace(/\s+/g, ' ').trim();
+                }
+                
+                // Affichage des résultats
+                const debugInfo = `
+<strong>✅ Extraction terminée</strong><br>
+Taille du buffer: ${arrayBuffer.byteLength} bytes<br>
+Texte brut trouvé: ${text.length} caractères<br>
+Texte extrait: ${extractedText.length} caractères<br>
+Patterns trouvés: ${textMatches ? textMatches.length : 0}
+                `;
+                
+                document.getElementById('extraction-debug').innerHTML = debugInfo;
+                
+                if (extractedText.trim()) {
+                    document.getElementById('result-area').textContent = extractedText.trim();
+                } else {
+                    document.getElementById('result-area').innerHTML = 
+                        '<em style="color: #FF3B30;">❌ Impossible d\'extraire le texte de ce PDF.<br>Le fichier pourrait être protégé ou dans un format non supporté.</em>';
+                }
+                
+            } catch (error) {
+                console.error('Erreur lors de l\'extraction:', error);
+                document.getElementById('extraction-debug').innerHTML = 
+                    '<strong style="color: #FF3B30;">❌ Erreur:</strong><br>' + error.message;
+                document.getElementById('result-area').innerHTML = 
+                    '<em style="color: #FF3B30;">Erreur lors de la lecture du PDF.</em>';
+            }
+        }
+        
+        // Initialisation
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Page de test PDF chargée');
+            showDebugInfo();
+        });
+    </script>
+</body>
+</html>
