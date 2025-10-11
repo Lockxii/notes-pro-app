@@ -7,6 +7,14 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="apple-mobile-web-app-title" content="PDF Test">
     <title>Test PDF Import - iPhone</title>
+    
+    <!-- PDF.js Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script>
+        // Configuration PDF.js
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    </script>
+    
     <style>
         * {
             margin: 0;
@@ -201,28 +209,34 @@
             }
         }
         
-        // Nettoyer et formater le texte automatiquement
+        // Nettoyer et formater le texte automatiquement (optimisé pour PDF.js)
         function cleanExtractedText(rawText) {
             if (!rawText) return '';
             
             let cleaned = rawText
-                // Supprimer les caractères de contrôle et non-imprimables
-                .replace(/[\x00-\x1F\x7F-\x9F]/g, ' ')
-                // Supprimer les caractères spéciaux PDF
-                .replace(/[^\w\sÀ-ÿ.,!?;:()\-'"]/g, ' ')
+                // Nettoyer les marqueurs de page résiduels
+                .replace(/--- Page \d+ ---/g, '')
+                // Normaliser les retours à la ligne
+                .replace(/\n{3,}/g, '\n\n')
+                .replace(/\n\s*\n/g, '\n\n')
                 // Nettoyer les espaces multiples
                 .replace(/\s+/g, ' ')
-                // Supprimer les mots trop courts ou suspects
-                .split(' ')
-                .filter(word => word.length > 1 && !/^[^a-zA-ZÀ-ÿ]+$/.test(word))
-                .join(' ')
-                // Ajouter des points à la fin des phrases si manquants
-                .replace(/([a-zA-ZÀ-ÿ])\s+([A-ZÀ-Ÿ])/g, '$1. $2')
                 // Nettoyer les espaces autour de la ponctuation
                 .replace(/\s+([.,!?;:])/g, '$1')
                 .replace(/([.,!?;:])\s*/g, '$1 ')
-                // Trim final
-                .trim();
+                // Corriger les mots collés (détection basique)
+                .replace(/([a-z])([A-Z])/g, '$1 $2')
+                // Ajouter des points à la fin des phrases si manquants
+                .replace(/([a-zA-ZÀ-ÿ])\s+([A-ZÀ-Ÿ])/g, '$1. $2')
+                // Supprimer les lignes trop courtes (probablement des artefacts)
+                .split('\n')
+                .filter(line => line.trim().length > 3)
+                .join('\n')
+                // Nettoyer les caractères de contrôle restants
+                .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '')
+                // Trim final et normaliser les espaces
+                .trim()
+                .replace(/\s+/g, ' ');
             
             return cleaned;
         }
@@ -316,116 +330,72 @@ Dernière modification: ${new Date(selectedFile.lastModified).toLocaleString()}
             }
         });
         
-        // Fonction d'extraction de texte PDF (version améliorée)
+        // Fonction d'extraction de texte PDF avec PDF.js (BEAUCOUP plus fiable !)
         async function extractTextFromPDF(file) {
             try {
                 document.getElementById('extraction-debug').innerHTML = 
-                    '<strong>🔄 Extraction en cours...</strong><br>Lecture du fichier PDF...';
+                    '<strong>🔄 Extraction en cours...</strong><br>Chargement avec PDF.js...';
                 
                 const arrayBuffer = await file.arrayBuffer();
-                const uint8Array = new Uint8Array(arrayBuffer);
                 
-                // Conversion en string avec décodage UTF-8 et Latin-1
-                let text = '';
-                let textLatin = '';
-                
-                // Essayer UTF-8
-                try {
-                    const decoder = new TextDecoder('utf-8');
-                    text = decoder.decode(uint8Array);
-                } catch (e) {
-                    // Fallback vers Latin-1
-                    const decoder = new TextDecoder('latin1');
-                    textLatin = decoder.decode(uint8Array);
-                }
-                
-                // Si UTF-8 n'a pas marché, utiliser Latin-1
-                if (!text) text = textLatin;
-                
-                // Sauvegarder pour le debug
-                rawPdfText = text;
+                // Charger le PDF avec PDF.js
+                const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
                 
                 document.getElementById('extraction-debug').innerHTML += 
-                    '<br>Décodage terminé, recherche de texte...';
+                    `<br>PDF chargé: ${pdf.numPages} pages détectées`;
                 
-                let extractedText = '';
+                let fullText = '';
+                let pagesProcessed = 0;
                 
-                // Méthode 1: Texte entre parenthèses (standard PDF)
-                const parenthesesMatches = text.match(/\(([^)]*)\)/g);
-                if (parenthesesMatches) {
-                    parenthesesMatches.forEach(match => {
-                        const content = match.replace(/[()]/g, '');
-                        // Filtrer le contenu lisible
-                        if (content.length > 1 && /[a-zA-ZÀ-ÿ]/.test(content)) {
-                            extractedText += content + ' ';
+                // Extraire le texte de chaque page
+                for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+                    try {
+                        const page = await pdf.getPage(pageNum);
+                        const textContent = await page.getTextContent();
+                        
+                        // Assembler le texte de la page
+                        let pageText = '';
+                        textContent.items.forEach(item => {
+                            if (item.str) {
+                                pageText += item.str + ' ';
+                            }
+                        });
+                        
+                        // Ajouter le texte de la page au texte complet
+                        if (pageText.trim()) {
+                            fullText += `\n\n--- Page ${pageNum} ---\n${pageText.trim()}`;
                         }
-                    });
-                }
-                
-                // Méthode 2: Texte entre crochets
-                const bracketMatches = text.match(/\[([^\]]*)\]/g);
-                if (bracketMatches) {
-                    bracketMatches.forEach(match => {
-                        const content = match.replace(/[\[\]]/g, '');
-                        if (content.length > 1 && /[a-zA-ZÀ-ÿ]/.test(content)) {
-                            extractedText += content + ' ';
-                        }
-                    });
-                }
-                
-                // Méthode 3: Recherche de séquences "Tj" (commande PDF pour afficher du texte)
-                const tjMatches = text.match(/\(([^)]+)\)\s*Tj/g);
-                if (tjMatches) {
-                    tjMatches.forEach(match => {
-                        const content = match.replace(/\(([^)]+)\)\s*Tj/, '$1');
-                        if (content.length > 1 && /[a-zA-ZÀ-ÿ]/.test(content)) {
-                            extractedText += content + ' ';
-                        }
-                    });
-                }
-                
-                // Méthode 4: Recherche de mots dans les streams décompressés
-                const streamMatches = text.match(/stream[\s\S]*?endstream/g);
-                if (streamMatches) {
-                    streamMatches.forEach(stream => {
-                        // Chercher du texte lisible dans les streams
-                        const words = stream.match(/[a-zA-ZÀ-ÿ]{3,}/g);
-                        if (words) {
-                            words.forEach(word => {
-                                if (word.length > 2 && extractedText.indexOf(word) === -1) {
-                                    extractedText += word + ' ';
-                                }
-                            });
-                        }
-                    });
-                }
-                
-                // Méthode 5: Extraction directe de mots (fallback)
-                if (extractedText.length < 20) {
-                    const directWords = text.match(/\b[a-zA-ZÀ-ÿ]{3,}\b/g);
-                    if (directWords) {
-                        // Prendre les 50 premiers mots uniques
-                        const uniqueWords = [...new Set(directWords.slice(0, 50))];
-                        extractedText += uniqueWords.join(' ');
+                        
+                        pagesProcessed++;
+                        
+                        // Mise à jour du progress
+                        document.getElementById('extraction-debug').innerHTML = 
+                            `<strong>🔄 Extraction en cours...</strong><br>
+                            PDF chargé: ${pdf.numPages} pages détectées<br>
+                            Pages traitées: ${pagesProcessed}/${pdf.numPages}`;
+                        
+                    } catch (pageError) {
+                        console.warn(`Erreur page ${pageNum}:`, pageError);
+                        fullText += `\n\n--- Page ${pageNum} (erreur) ---\n[Impossible de lire cette page]`;
                     }
                 }
                 
-                // Nettoyage final
-                extractedText = extractedText
-                    .replace(/\s+/g, ' ')
-                    .replace(/[^\w\sÀ-ÿ.,!?;:-]/g, '')
+                // Sauvegarder pour le debug
+                rawPdfText = fullText;
+                
+                // Nettoyage basique
+                let extractedText = fullText
+                    .replace(/\n\n--- Page \d+ ---\n/g, '\n\n')  // Supprimer les marqueurs de page
+                    .replace(/\s+/g, ' ')  // Normaliser les espaces
                     .trim();
                 
                 // Affichage des résultats
                 const debugInfo = `
-<strong>✅ Extraction terminée</strong><br>
-Taille du buffer: ${arrayBuffer.byteLength} bytes<br>
-Texte brut trouvé: ${text.length} caractères<br>
-Texte extrait: ${extractedText.length} caractères<br>
-Parenthèses trouvées: ${parenthesesMatches ? parenthesesMatches.length : 0}<br>
-Crochets trouvés: ${bracketMatches ? bracketMatches.length : 0}<br>
-Commandes Tj: ${tjMatches ? tjMatches.length : 0}<br>
-Streams: ${streamMatches ? streamMatches.length : 0}
+<strong>✅ Extraction terminée avec PDF.js</strong><br>
+Pages total: ${pdf.numPages}<br>
+Pages traitées: ${pagesProcessed}<br>
+Caractères extraits: ${extractedText.length}<br>
+Méthode: PDF.js TextContent API
                 `;
                 
                 document.getElementById('extraction-debug').innerHTML = debugInfo;
@@ -433,7 +403,7 @@ Streams: ${streamMatches ? streamMatches.length : 0}
                 if (extractedText.trim()) {
                     // Afficher le résultat brut (limité)
                     const displayText = extractedText.length > 1000 
-                        ? extractedText.substring(0, 1000) + '\n\n[... texte tronqué ...]'
+                        ? extractedText.substring(0, 1000) + '\n\n[... texte tronqué - voir champ éditable pour le texte complet ...]'
                         : extractedText;
                     
                     document.getElementById('result-area').textContent = displayText.trim();
@@ -450,7 +420,7 @@ Streams: ${streamMatches ? streamMatches.length : 0}
                     
                 } else {
                     document.getElementById('result-area').innerHTML = 
-                        '<em style="color: #FF3B30;">❌ Impossible d\'extraire le texte de ce PDF.<br>Le fichier pourrait être protégé, crypté ou dans un format non supporté.</em>';
+                        '<em style="color: #FF3B30;">❌ Aucun texte trouvé dans ce PDF.<br>Le fichier pourrait être composé uniquement d\'images ou être protégé.</em>';
                     
                     document.getElementById('clean-text-area').value = '';
                 }
@@ -458,9 +428,9 @@ Streams: ${streamMatches ? streamMatches.length : 0}
             } catch (error) {
                 console.error('Erreur lors de l\'extraction:', error);
                 document.getElementById('extraction-debug').innerHTML = 
-                    '<strong style="color: #FF3B30;">❌ Erreur:</strong><br>' + error.message;
+                    '<strong style="color: #FF3B30;">❌ Erreur PDF.js:</strong><br>' + error.message;
                 document.getElementById('result-area').innerHTML = 
-                    '<em style="color: #FF3B30;">Erreur lors de la lecture du PDF.</em>';
+                    '<em style="color: #FF3B30;">Erreur lors de la lecture du PDF avec PDF.js.</em>';
             }
         }
         
