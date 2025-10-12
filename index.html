@@ -324,8 +324,8 @@
         <header class="header">
             <div class="header-title" id="note-title">Cyber sécurité</div>
             <div class="header-actions">
-                <button class="btn btn-secondary" onclick="showNotes()">📝</button>
-                <button class="btn" onclick="saveNote()">✓</button>
+                <button class="btn btn-secondary" id="notes-btn">📝</button>
+                <button class="btn" id="save-btn">✓</button>
             </div>
         </header>
         
@@ -339,24 +339,24 @@
         
         <div class="toolbar">
             <div class="toolbar-left">
-                <button class="toolbar-btn" onclick="insertText('• ')">•</button>
-                <button class="toolbar-btn" onclick="insertText('→ ')">→</button>
+                <button class="toolbar-btn" id="bullet-btn">•</button>
+                <button class="toolbar-btn" id="arrow-btn">→</button>
             </div>
             
             <div class="format-controls">
-                <button class="format-btn" onclick="toggleBold()" id="bold-btn">B</button>
-                <button class="format-btn" onclick="toggleItalic()" id="italic-btn">I</button>
-                <button class="format-btn" onclick="toggleUnderline()" id="underline-btn">U</button>
+                <button class="format-btn" id="bold-btn">B</button>
+                <button class="format-btn" id="italic-btn">I</button>
+                <button class="format-btn" id="underline-btn">U</button>
             </div>
         </div>
     </div>
     
     <!-- Modal des notes -->
-    <div class="notes-overlay" id="notes-overlay" onclick="hideNotes()">
-        <div class="notes-modal" onclick="event.stopPropagation()">
+    <div class="notes-overlay" id="notes-overlay">
+        <div class="notes-modal">
             <div class="notes-header">
                 <div class="notes-title">Mes Notes</div>
-                <button class="close-btn" onclick="hideNotes()">&times;</button>
+                <button class="close-btn" id="close-notes-btn">&times;</button>
             </div>
             <div class="notes-content" id="notes-content">
                 <!-- Notes seront ajoutées ici -->

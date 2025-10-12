@@ -1,4 +1,4 @@
-// App Notes - Interface iOS Style
+// App Notes - Interface iOS Style avec Slugs
 
 let currentNoteId = null;
 let editor = null;
@@ -11,17 +11,98 @@ document.addEventListener('DOMContentLoaded', function() {
     noteTitle = document.getElementById('note-title');
     toolbar = document.querySelector('.toolbar');
     
-    // Charger la dernière note ou créer une nouvelle
-    loadLastNote();
-    
-    // Auto-sauvegarde en tapant
-    editor.addEventListener('input', debounce(autoSave, 1000));
+    // Initialiser les event listeners
+    initEventListeners();
     
     // Initialiser le système clavier
     initKeyboardHandling();
     
+    // Gérer les routes (slugs)
+    handleRouting();
+    
+    // Auto-sauvegarde en tapant
+    editor.addEventListener('input', debounce(autoSave, 1000));
+    
     console.log('App Notes chargée !');
 });
+
+// Initialiser tous les event listeners
+function initEventListeners() {
+    // Boutons header
+    document.getElementById('notes-btn').addEventListener('click', showNotes);
+    document.getElementById('save-btn').addEventListener('click', () => saveNote());
+    
+    // Boutons toolbar
+    document.getElementById('bullet-btn').addEventListener('click', () => insertText('• '));
+    document.getElementById('arrow-btn').addEventListener('click', () => insertText('→ '));
+    document.getElementById('bold-btn').addEventListener('click', toggleBold);
+    document.getElementById('italic-btn').addEventListener('click', toggleItalic);
+    document.getElementById('underline-btn').addEventListener('click', toggleUnderline);
+    
+    // Modal notes
+    document.getElementById('notes-overlay').addEventListener('click', (e) => {
+        if (e.target.id === 'notes-overlay') hideNotes();
+    });
+    document.getElementById('close-notes-btn').addEventListener('click', hideNotes);
+    
+    // Écouter les changements d'URL
+    window.addEventListener('popstate', handleRouting);
+}
+
+// Système de routing avec slugs
+function handleRouting() {
+    const path = window.location.pathname;
+    const slug = path.split('/').pop();
+    
+    if (slug && slug !== '' && slug !== 'index.html') {
+        // Charger la note basée sur le slug
+        loadNoteBySlug(slug);
+    } else {
+        // Charger la note par défaut ou dernière note
+        loadLastNote();
+    }
+}
+
+// Créer un slug à partir d'un titre
+function createSlug(title) {
+    return title
+        .toLowerCase()
+        .replace(/[àáâäã]/g, 'a')
+        .replace(/[èéêë]/g, 'e')
+        .replace(/[ìíîï]/g, 'i')
+        .replace(/[òóôöõ]/g, 'o')
+        .replace(/[ùúûü]/g, 'u')
+        .replace(/[ç]/g, 'c')
+        .replace(/[^a-z0-9\s-]/g, '')
+        .replace(/\s+/g, '-')
+        .replace(/-+/g, '-')
+        .substring(0, 50);
+}
+
+// Naviguer vers une note avec slug
+function navigateToNote(noteId, title) {
+    const slug = createSlug(title);
+    const url = `/${slug}`;
+    
+    // Mettre à jour l'URL sans recharger la page
+    window.history.pushState({ noteId, slug }, title, url);
+    
+    // Charger la note
+    loadNote(noteId);
+}
+
+// Charger une note par slug
+function loadNoteBySlug(slug) {
+    const notes = getAllNotes();
+    const note = notes.find(n => createSlug(n.title) === slug);
+    
+    if (note) {
+        loadNote(note.id);
+    } else {
+        // Si pas trouvé, charger la note par défaut
+        loadLastNote();
+    }
+}
 
 // Gestion du clavier iOS avec Visual Viewport API
 function initKeyboardHandling() {
@@ -100,6 +181,13 @@ function saveNote(silent = false) {
     currentNoteId = noteId;
     noteTitle.textContent = title;
     
+    // Mettre à jour l'URL avec le slug
+    const slug = createSlug(title);
+    const newUrl = `/${slug}`;
+    if (window.location.pathname !== newUrl) {
+        window.history.replaceState({ noteId, slug }, title, newUrl);
+    }
+    
     if (!silent) {
         showToast('Note sauvée ✓');
     }
@@ -114,6 +202,13 @@ function loadNote(noteId) {
         currentNoteId = noteId;
         noteTitle.textContent = note.title;
         localStorage.setItem('lastNoteId', noteId);
+        
+        // Mettre à jour l'URL
+        const slug = createSlug(note.title);
+        const newUrl = `/${slug}`;
+        if (window.location.pathname !== newUrl) {
+            window.history.replaceState({ noteId, slug }, note.title, newUrl);
+        }
     }
 }
 
@@ -171,10 +266,10 @@ function showNotes() {
         notes.forEach(note => {
             const noteItem = document.createElement('div');
             noteItem.className = 'note-item';
-            noteItem.onclick = () => {
-                loadNote(note.id);
+            noteItem.addEventListener('click', () => {
+                navigateToNote(note.id, note.title);
                 hideNotes();
-            };
+            });
             
             const date = new Date(note.date).toLocaleDateString('fr-FR', {
                 day: 'numeric',
@@ -285,11 +380,4 @@ function showToast(message) {
     }, 2000);
 }
 
-// Rendre les fonctions accessibles globalement pour les onclick HTML
-window.showNotes = showNotes;
-window.hideNotes = hideNotes;
-window.saveNote = saveNote;
-window.insertText = insertText;
-window.toggleBold = toggleBold;
-window.toggleItalic = toggleItalic;
-window.toggleUnderline = toggleUnderline;
+// Les fonctions sont maintenant attachées via addEventListener, plus besoin de window
