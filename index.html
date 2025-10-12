@@ -1,14 +1,365 @@
 <!DOCTYPE html>
-<html>
+<html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="light-content">
+    <meta name="apple-mobile-web-app-title" content="Notes">
+    <meta name="theme-color" content="#1C1C1E">
     <title>Notes</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', sans-serif;
+            background: #000000;
+            color: #FFFFFF;
+            height: 100vh;
+            overflow: hidden;
+            padding-top: env(safe-area-inset-top);
+            padding-bottom: env(safe-area-inset-bottom);
+        }
+        
+        .container {
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            background: #000000;
+        }
+        
+        .header {
+            background: #1C1C1E;
+            padding: 12px 20px;
+            border-bottom: 1px solid #38383A;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            min-height: 60px;
+        }
+        
+        .header-title {
+            font-size: 17px;
+            font-weight: 600;
+            color: #FFFFFF;
+        }
+        
+        .header-actions {
+            display: flex;
+            gap: 15px;
+        }
+        
+        .btn {
+            background: #007AFF;
+            color: #FFFFFF;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        .btn:active {
+            background: #0056B3;
+            transform: scale(0.95);
+        }
+        
+        .btn-secondary {
+            background: #48484A;
+            color: #FFFFFF;
+        }
+        
+        .btn-secondary:active {
+            background: #636366;
+        }
+        
+        .main-content {
+            flex: 1;
+            background: #000000;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .editor {
+            width: 100%;
+            height: 100%;
+            background: #000000;
+            color: #FFFFFF;
+            border: none;
+            outline: none;
+            padding: 20px;
+            font-size: 17px;
+            line-height: 1.5;
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', sans-serif;
+            resize: none;
+            -webkit-appearance: none;
+        }
+        
+        .editor::placeholder {
+            color: #8E8E93;
+            font-size: 17px;
+        }
+        
+        .toolbar {
+            background: #1C1C1E;
+            border-top: 1px solid #38383A;
+            padding: 12px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            padding-bottom: calc(12px + env(safe-area-inset-bottom));
+        }
+        
+        .toolbar-left {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+        
+        .toolbar-btn {
+            background: none;
+            border: none;
+            color: #007AFF;
+            font-size: 18px;
+            padding: 8px;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: all 0.2s;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        .toolbar-btn:active {
+            background: #2C2C2E;
+        }
+        
+        .format-controls {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+        
+        .format-btn {
+            background: #2C2C2E;
+            border: none;
+            color: #FFFFFF;
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        .format-btn:active,
+        .format-btn.active {
+            background: #007AFF;
+        }
+        
+        .notes-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(20px);
+            display: none;
+            z-index: 2000;
+        }
+        
+        .notes-modal {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: #1C1C1E;
+            width: 90%;
+            max-width: 400px;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
+        }
+        
+        .notes-header {
+            padding: 20px;
+            background: #2C2C2E;
+            text-align: center;
+            position: relative;
+        }
+        
+        .notes-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #FFFFFF;
+        }
+        
+        .close-btn {
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            background: none;
+            border: none;
+            color: #8E8E93;
+            font-size: 24px;
+            cursor: pointer;
+            padding: 5px;
+        }
+        
+        .notes-content {
+            max-height: 60vh;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+        
+        .note-item {
+            padding: 16px 20px;
+            border-bottom: 1px solid #38383A;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        
+        .note-item:active {
+            background: #2C2C2E;
+        }
+        
+        .note-item:last-child {
+            border-bottom: none;
+        }
+        
+        .note-title {
+            font-size: 16px;
+            font-weight: 500;
+            color: #FFFFFF;
+            margin-bottom: 4px;
+        }
+        
+        .note-preview {
+            font-size: 14px;
+            color: #8E8E93;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+        
+        .note-date {
+            font-size: 12px;
+            color: #636366;
+            margin-top: 4px;
+        }
+        
+        /* Scroll personnalisé */
+        .notes-content::-webkit-scrollbar {
+            width: 4px;
+        }
+        
+        .notes-content::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        
+        .notes-content::-webkit-scrollbar-thumb {
+            background: #48484A;
+            border-radius: 2px;
+        }
+        
+        .editor::-webkit-scrollbar {
+            width: 4px;
+        }
+        
+        .editor::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        
+        .editor::-webkit-scrollbar-thumb {
+            background: #48484A;
+            border-radius: 2px;
+        }
+        
+        /* Animation d'entrée */
+        .notes-overlay.show {
+            display: block;
+            animation: fadeIn 0.3s ease-out;
+        }
+        
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+        
+        /* Responsive */
+        @media (max-height: 700px) {
+            .editor {
+                padding: 15px;
+            }
+            
+            .toolbar {
+                padding: 10px 15px;
+            }
+        }
+    </style>
 </head>
 <body>
-    <h1>Notes App</h1>
-    <textarea id="editor" placeholder="Écrivez votre note..."></textarea>
-    <button onclick="saveNote()">Sauver</button>
+    <div class="container">
+        <header class="header">
+            <div class="header-title" id="note-title">Cyber sécurité</div>
+            <div class="header-actions">
+                <button class="btn btn-secondary" onclick="showNotes()">📝</button>
+                <button class="btn" onclick="saveNote()">✓</button>
+            </div>
+        </header>
+        
+        <main class="main-content">
+            <textarea 
+                class="editor" 
+                id="editor" 
+                placeholder="Commencez à écrire..."
+            ></textarea>
+        </main>
+        
+        <div class="toolbar">
+            <div class="toolbar-left">
+                <button class="toolbar-btn" onclick="insertText('• ')">•</button>
+                <button class="toolbar-btn" onclick="insertText('→ ')">→</button>
+            </div>
+            
+            <div class="format-controls">
+                <button class="format-btn" onclick="toggleBold()" id="bold-btn">B</button>
+                <button class="format-btn" onclick="toggleItalic()" id="italic-btn">I</button>
+                <button class="format-btn" onclick="toggleUnderline()" id="underline-btn">U</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal des notes -->
+    <div class="notes-overlay" id="notes-overlay" onclick="hideNotes()">
+        <div class="notes-modal" onclick="event.stopPropagation()">
+            <div class="notes-header">
+                <div class="notes-title">Mes Notes</div>
+                <button class="close-btn" onclick="hideNotes()">&times;</button>
+            </div>
+            <div class="notes-content" id="notes-content">
+                <!-- Notes seront ajoutées ici -->
+            </div>
+        </div>
+    </div>
+    
     <script src="app.js"></script>
 </body>
 </html>
