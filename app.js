@@ -3,11 +3,13 @@
 let currentNoteId = null;
 let editor = null;
 let noteTitle = null;
+let toolbar = null;
 
 // Initialisation
 document.addEventListener('DOMContentLoaded', function() {
     editor = document.getElementById('editor');
     noteTitle = document.getElementById('note-title');
+    toolbar = document.querySelector('.toolbar');
     
     // Charger la dernière note ou créer une nouvelle
     loadLastNote();
@@ -15,8 +17,43 @@ document.addEventListener('DOMContentLoaded', function() {
     // Auto-sauvegarde en tapant
     editor.addEventListener('input', debounce(autoSave, 1000));
     
+    // Initialiser le système clavier
+    initKeyboardHandling();
+    
     console.log('App Notes chargée !');
 });
+
+// Gestion du clavier iOS avec Visual Viewport API
+function initKeyboardHandling() {
+    if (!window.visualViewport) {
+        console.log('Visual Viewport API non supporté');
+        return;
+    }
+
+    function adjustForKeyboard() {
+        const viewport = window.visualViewport;
+        const keyboardHeight = window.innerHeight - viewport.height;
+        
+        if (keyboardHeight > 100) {
+            // Clavier ouvert - déplacer la toolbar au-dessus
+            toolbar.style.transform = `translateY(-${keyboardHeight}px)`;
+            
+            // Ajuster l'editor pour éviter que la toolbar le couvre
+            editor.style.paddingBottom = `${toolbar.offsetHeight + 20}px`;
+        } else {
+            // Clavier fermé - remettre la toolbar en bas
+            toolbar.style.transform = 'translateY(0)';
+            editor.style.paddingBottom = `${toolbar.offsetHeight + 20}px`;
+        }
+    }
+
+    // Écouter les changements du clavier
+    window.visualViewport.addEventListener('resize', adjustForKeyboard);
+    window.visualViewport.addEventListener('scroll', adjustForKeyboard);
+    
+    // Ajustement initial
+    setTimeout(adjustForKeyboard, 100);
+}
 
 // Debounce pour éviter trop de sauvegardes
 function debounce(func, wait) {
@@ -247,3 +284,12 @@ function showToast(message) {
         toast.style.opacity = '0';
     }, 2000);
 }
+
+// Rendre les fonctions accessibles globalement pour les onclick HTML
+window.showNotes = showNotes;
+window.hideNotes = hideNotes;
+window.saveNote = saveNote;
+window.insertText = insertText;
+window.toggleBold = toggleBold;
+window.toggleItalic = toggleItalic;
+window.toggleUnderline = toggleUnderline;
