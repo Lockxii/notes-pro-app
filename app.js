@@ -59,10 +59,10 @@ function initEventListeners() {
 
 // Système de routing avec slugs
 function handleRouting() {
-    const path = window.location.pathname;
-    const slug = path.split('/').pop();
+    const urlParams = new URLSearchParams(window.location.search);
+    const slug = urlParams.get('note');
     
-    if (slug && slug !== '' && slug !== 'index.html') {
+    if (slug) {
         // Charger la note basée sur le slug
         loadNoteBySlug(slug);
     } else {
@@ -90,7 +90,7 @@ function createSlug(title) {
 // Naviguer vers une note avec slug
 function navigateToNote(noteId, title) {
     const slug = createSlug(title);
-    const url = `/${slug}`;
+    const url = `?note=${slug}`;
     
     // Mettre à jour l'URL sans recharger la page
     window.history.pushState({ noteId, slug }, title, url);
@@ -191,8 +191,8 @@ function saveNote(silent = false) {
     
     // Mettre à jour l'URL avec le slug
     const slug = createSlug(title);
-    const newUrl = `/${slug}`;
-    if (window.location.pathname !== newUrl) {
+    const newUrl = `?note=${slug}`;
+    if (window.location.search !== newUrl) {
         window.history.replaceState({ noteId, slug }, title, newUrl);
     }
     
@@ -213,8 +213,8 @@ function loadNote(noteId) {
         
         // Mettre à jour l'URL
         const slug = createSlug(note.title);
-        const newUrl = `/${slug}`;
-        if (window.location.pathname !== newUrl) {
+        const newUrl = `?note=${slug}`;
+        if (window.location.search !== newUrl) {
             window.history.replaceState({ noteId, slug }, note.title, newUrl);
         }
     }
@@ -422,17 +422,38 @@ function createNewNote() {
         saveNote(true);
     }
     
-    // Créer une nouvelle note vide
-    currentNoteId = null;
-    editor.value = '';
-    noteTitle.textContent = 'Nouvelle note';
+    // Créer immédiatement une note avec contenu par défaut pour qu'elle apparaisse
+    const noteId = 'note_' + Date.now();
+    const defaultContent = 'Votre nouvelle note...';
+    const title = 'Nouvelle note';
+    
+    const note = {
+        id: noteId,
+        title: title,
+        content: defaultContent,
+        date: new Date().toISOString()
+    };
+    
+    // Sauvegarder immédiatement
+    localStorage.setItem(noteId, JSON.stringify(note));
+    localStorage.setItem('lastNoteId', noteId);
+    
+    // Charger dans l'éditeur
+    currentNoteId = noteId;
+    editor.value = defaultContent;
+    noteTitle.textContent = title;
     
     // Mettre à jour l'URL
-    window.history.pushState({ noteId: null }, 'Nouvelle note', '/nouvelle-note');
+    window.history.pushState({ noteId, slug: 'nouvelle-note' }, title, '?note=nouvelle-note');
     
     // Fermer le modal et focus sur l'editor
     hideNotes();
-    editor.focus();
+    
+    // Sélectionner tout le texte par défaut pour faciliter l'écriture
+    setTimeout(() => {
+        editor.focus();
+        editor.select();
+    }, 100);
     
     showToast('Nouvelle note créée ✓');
 }
@@ -479,14 +500,19 @@ function saveEditedTitle() {
             
             // Mettre à jour l'URL
             const slug = createSlug(newTitle);
-            window.history.replaceState({ noteId: editingNoteId, slug }, newTitle, `/${slug}`);
+            window.history.replaceState({ noteId: editingNoteId, slug }, newTitle, `?note=${slug}`);
         }
         
         // Fermer le modal
         hideEditModal();
         
-        // Rafraîchir la liste des notes
-        showNotes();
+        // Rafraîchir la liste des notes si elle est ouverte
+        if (!document.getElementById('notes-overlay').classList.contains('show')) {
+            // Si la liste n'est pas ouverte, ne pas la rouvrir
+        } else {
+            // Rafraîchir la liste existante
+            setTimeout(() => showNotes(), 100);
+        }
         
         showToast('Titre modifié ✓');
     }
@@ -516,8 +542,10 @@ function deleteNote(noteId, noteTitle) {
             localStorage.removeItem('lastNoteId');
         }
         
-        // Rafraîchir la liste
-        showNotes();
+        // Rafraîchir la liste si elle est ouverte
+        if (document.getElementById('notes-overlay').classList.contains('show')) {
+            setTimeout(() => showNotes(), 100);
+        }
         
         showToast('Note supprimée ✓');
     }

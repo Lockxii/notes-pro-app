@@ -294,17 +294,23 @@
             display: flex;
             gap: 8px;
             margin-left: 10px;
+            flex-shrink: 0;
         }
         
         .note-action-btn {
             background: #48484A;
             border: none;
             color: white;
-            padding: 6px 8px;
-            border-radius: 6px;
-            font-size: 12px;
+            padding: 10px 12px;
+            border-radius: 8px;
+            font-size: 16px;
             cursor: pointer;
             transition: all 0.2s;
+            min-width: 44px;
+            min-height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
         
         .note-action-btn:active {
