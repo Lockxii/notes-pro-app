@@ -221,6 +221,23 @@
             padding: 5px;
         }
         
+        .new-note-btn {
+            position: absolute;
+            top: 15px;
+            left: 20px;
+            background: #007AFF;
+            border: none;
+            color: white;
+            font-size: 20px;
+            cursor: pointer;
+            padding: 8px 12px;
+            border-radius: 8px;
+        }
+        
+        .new-note-btn:active {
+            background: #0056B3;
+        }
+        
         .notes-content {
             max-height: 60vh;
             overflow-y: auto;
@@ -230,8 +247,11 @@
         .note-item {
             padding: 16px 20px;
             border-bottom: 1px solid #38383A;
-            cursor: pointer;
             transition: background-color 0.2s;
+            position: relative;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
         }
         
         .note-item:active {
@@ -240,6 +260,11 @@
         
         .note-item:last-child {
             border-bottom: none;
+        }
+        
+        .note-main {
+            flex: 1;
+            cursor: pointer;
         }
         
         .note-title {
@@ -263,6 +288,112 @@
             font-size: 12px;
             color: #636366;
             margin-top: 4px;
+        }
+        
+        .note-actions {
+            display: flex;
+            gap: 8px;
+            margin-left: 10px;
+        }
+        
+        .note-action-btn {
+            background: #48484A;
+            border: none;
+            color: white;
+            padding: 6px 8px;
+            border-radius: 6px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .note-action-btn:active {
+            transform: scale(0.95);
+        }
+        
+        .note-action-btn.edit {
+            background: #FF9500;
+        }
+        
+        .note-action-btn.edit:active {
+            background: #CC7700;
+        }
+        
+        .note-action-btn.delete {
+            background: #FF3B30;
+        }
+        
+        .note-action-btn.delete:active {
+            background: #D70015;
+        }
+        
+        /* Modal pour éditer le titre */
+        .edit-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            display: none;
+            z-index: 3000;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .edit-modal.show {
+            display: flex;
+        }
+        
+        .edit-content {
+            background: #1C1C1E;
+            padding: 20px;
+            border-radius: 15px;
+            width: 90%;
+            max-width: 300px;
+        }
+        
+        .edit-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: white;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+        
+        .edit-input {
+            width: 100%;
+            background: #2C2C2E;
+            border: 1px solid #48484A;
+            color: white;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 16px;
+            margin-bottom: 15px;
+        }
+        
+        .edit-buttons {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .edit-btn {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        
+        .edit-btn.cancel {
+            background: #48484A;
+            color: white;
+        }
+        
+        .edit-btn.save {
+            background: #007AFF;
+            color: white;
         }
         
         /* Scroll personnalisé */
@@ -355,11 +486,24 @@
     <div class="notes-overlay" id="notes-overlay">
         <div class="notes-modal">
             <div class="notes-header">
+                <button class="new-note-btn" id="new-note-btn">+</button>
                 <div class="notes-title">Mes Notes</div>
                 <button class="close-btn" id="close-notes-btn">&times;</button>
             </div>
             <div class="notes-content" id="notes-content">
                 <!-- Notes seront ajoutées ici -->
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal pour éditer le titre -->
+    <div class="edit-modal" id="edit-modal">
+        <div class="edit-content">
+            <div class="edit-title">Modifier le titre</div>
+            <input type="text" class="edit-input" id="edit-input" placeholder="Nouveau titre">
+            <div class="edit-buttons">
+                <button class="edit-btn cancel" id="edit-cancel">Annuler</button>
+                <button class="edit-btn save" id="edit-save">Sauver</button>
             </div>
         </div>
     </div>

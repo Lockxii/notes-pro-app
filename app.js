@@ -44,6 +44,14 @@ function initEventListeners() {
         if (e.target.id === 'notes-overlay') hideNotes();
     });
     document.getElementById('close-notes-btn').addEventListener('click', hideNotes);
+    document.getElementById('new-note-btn').addEventListener('click', createNewNote);
+    
+    // Modal édition titre
+    document.getElementById('edit-modal').addEventListener('click', (e) => {
+        if (e.target.id === 'edit-modal') hideEditModal();
+    });
+    document.getElementById('edit-cancel').addEventListener('click', hideEditModal);
+    document.getElementById('edit-save').addEventListener('click', saveEditedTitle);
     
     // Écouter les changements d'URL
     window.addEventListener('popstate', handleRouting);
@@ -266,10 +274,6 @@ function showNotes() {
         notes.forEach(note => {
             const noteItem = document.createElement('div');
             noteItem.className = 'note-item';
-            noteItem.addEventListener('click', () => {
-                navigateToNote(note.id, note.title);
-                hideNotes();
-            });
             
             const date = new Date(note.date).toLocaleDateString('fr-FR', {
                 day: 'numeric',
@@ -279,10 +283,37 @@ function showNotes() {
             });
             
             noteItem.innerHTML = `
-                <div class="note-title">${note.title}</div>
-                <div class="note-preview">${note.content.substring(0, 100)}...</div>
-                <div class="note-date">${date}</div>
+                <div class="note-main">
+                    <div class="note-title">${note.title}</div>
+                    <div class="note-preview">${note.content.substring(0, 100)}...</div>
+                    <div class="note-date">${date}</div>
+                </div>
+                <div class="note-actions">
+                    <button class="note-action-btn edit" data-note-id="${note.id}">✏️</button>
+                    <button class="note-action-btn delete" data-note-id="${note.id}">🗑️</button>
+                </div>
             `;
+            
+            // Event listener pour ouvrir la note
+            const noteMain = noteItem.querySelector('.note-main');
+            noteMain.addEventListener('click', () => {
+                navigateToNote(note.id, note.title);
+                hideNotes();
+            });
+            
+            // Event listener pour éditer le titre
+            const editBtn = noteItem.querySelector('.edit');
+            editBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                editNoteTitle(note.id, note.title);
+            });
+            
+            // Event listener pour supprimer
+            const deleteBtn = noteItem.querySelector('.delete');
+            deleteBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                deleteNote(note.id, note.title);
+            });
             
             notesContent.appendChild(noteItem);
         });
@@ -378,6 +409,118 @@ function showToast(message) {
     setTimeout(() => {
         toast.style.opacity = '0';
     }, 2000);
+}
+
+// ============ NOUVELLES FONCTIONNALITÉS ============
+
+let editingNoteId = null;
+
+// Créer une nouvelle note
+function createNewNote() {
+    // Sauver la note actuelle avant de créer une nouvelle
+    if (editor.value.trim()) {
+        saveNote(true);
+    }
+    
+    // Créer une nouvelle note vide
+    currentNoteId = null;
+    editor.value = '';
+    noteTitle.textContent = 'Nouvelle note';
+    
+    // Mettre à jour l'URL
+    window.history.pushState({ noteId: null }, 'Nouvelle note', '/nouvelle-note');
+    
+    // Fermer le modal et focus sur l'editor
+    hideNotes();
+    editor.focus();
+    
+    showToast('Nouvelle note créée ✓');
+}
+
+// Éditer le titre d'une note
+function editNoteTitle(noteId, currentTitle) {
+    editingNoteId = noteId;
+    
+    const editModal = document.getElementById('edit-modal');
+    const editInput = document.getElementById('edit-input');
+    
+    editInput.value = currentTitle;
+    editModal.classList.add('show');
+    
+    // Focus et sélection du texte
+    setTimeout(() => {
+        editInput.focus();
+        editInput.select();
+    }, 100);
+}
+
+// Sauvegarder le titre édité
+function saveEditedTitle() {
+    const newTitle = document.getElementById('edit-input').value.trim();
+    
+    if (!newTitle) {
+        showToast('Le titre ne peut pas être vide');
+        return;
+    }
+    
+    // Récupérer la note
+    const noteData = localStorage.getItem(editingNoteId);
+    if (noteData) {
+        const note = JSON.parse(noteData);
+        note.title = newTitle;
+        note.date = new Date().toISOString(); // Mettre à jour la date
+        
+        // Sauvegarder
+        localStorage.setItem(editingNoteId, JSON.stringify(note));
+        
+        // Si c'est la note actuelle, mettre à jour l'interface
+        if (currentNoteId === editingNoteId) {
+            noteTitle.textContent = newTitle;
+            
+            // Mettre à jour l'URL
+            const slug = createSlug(newTitle);
+            window.history.replaceState({ noteId: editingNoteId, slug }, newTitle, `/${slug}`);
+        }
+        
+        // Fermer le modal
+        hideEditModal();
+        
+        // Rafraîchir la liste des notes
+        showNotes();
+        
+        showToast('Titre modifié ✓');
+    }
+}
+
+// Masquer le modal d'édition
+function hideEditModal() {
+    document.getElementById('edit-modal').classList.remove('show');
+    editingNoteId = null;
+}
+
+// Supprimer une note
+function deleteNote(noteId, noteTitle) {
+    const confirmDelete = confirm(`Supprimer la note "${noteTitle}" ?\n\nCette action est irréversible.`);
+    
+    if (confirmDelete) {
+        // Supprimer de localStorage
+        localStorage.removeItem(noteId);
+        
+        // Si c'est la note actuellement ouverte, créer une nouvelle note
+        if (currentNoteId === noteId) {
+            createNewNote();
+        }
+        
+        // Si c'était la dernière note ouverte, nettoyer
+        if (localStorage.getItem('lastNoteId') === noteId) {
+            localStorage.removeItem('lastNoteId');
+        }
+        
+        // Rafraîchir la liste
+        showNotes();
+        
+        showToast('Note supprimée ✓');
+    }
 }
 
 // Les fonctions sont maintenant attachées via addEventListener, plus besoin de window
